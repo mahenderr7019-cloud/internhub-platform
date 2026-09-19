@@ -1,0 +1,50 @@
+{% extends 'admin/admin_base.html' %}
+{% block admin_content %}
+<h2>🎓 Certificates</h2>
+<p style="color:#666;margin-bottom:20px;">All issued certificates. You can revoke fraudulent ones.</p>
+
+<table class="admin-table">
+    <tr>
+        <th>Code</th>
+        <th>Student</th>
+        <th>Internship</th>
+        <th>Score</th>
+        <th>Issued</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+    {% for c in certificates %}
+    <tr>
+        <td><code style="background:#eef2ff;padding:3px 8px;border-radius:4px;font-size:0.85rem;">{{ c.code }}</code></td>
+        <td>{{ c.user.name }}</td>
+        <td>{{ c.internship.title }}</td>
+        <td>{{ c.avg_score }}%</td>
+        <td>{{ c.issued_at.strftime('%d %b %Y') }}</td>
+        <td>
+            {% if c.is_revoked %}
+                <span style="color:#dc2626;font-weight:600;">❌ Revoked</span>
+            {% else %}
+                <span style="color:#16a34a;font-weight:600;">✅ Active</span>
+            {% endif %}
+        </td>
+        <td>
+            <a href="{{ url_for('view_certificate', code=c.code) }}" target="_blank">View</a>
+            {% if c.is_revoked %}
+                |
+                <form method="POST" action="{{ url_for('admin_certificate_restore', cid=c.id) }}" style="display:inline;">
+                    <button class="link-danger" style="color:#16a34a;">Restore</button>
+                </form>
+            {% else %}
+                |
+                <form method="POST" action="{{ url_for('admin_certificate_revoke', cid=c.id) }}" style="display:inline;" onsubmit="return confirm('Revoke this certificate?')">
+                    <input type="hidden" name="reason" value="Revoked by admin">
+                    <button class="link-danger">Revoke</button>
+                </form>
+            {% endif %}
+        </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" style="text-align:center;color:#888;padding:30px;">No certificates issued yet.</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

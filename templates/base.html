@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}InternHub{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="{{ url_for('index') }}" class="logo">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Byte and Build" style="height:70px;vertical-align:middle;">
+</a>
+
+        <button class="hamburger" onclick="toggleMenu()" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <ul class="nav-menu" id="navMenu">
+            <li><a href="{{ url_for('index') }}">Home</a></li>
+            <li><a href="{{ url_for('verify') }}">Verify</a></li>
+            <li><a href="{{ url_for('index') }}#about">About</a></li>
+            {% if current_user.is_authenticated %}
+                {% if current_user.role == 'admin' %}
+                    <li><a href="{{ url_for('admin_dashboard') }}">Admin</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('student_dashboard') }}">Dashboard</a></li>
+                    <li><a href="{{ url_for('my_internships') }}">My Internships</a></li>
+                    <li><a href="{{ url_for('my_certificates') }}">My Certificates</a></li>
+                    {% if current_user.school_id %}
+                        <li><a href="{{ url_for('school_classes') }}">School Classes</a></li>
+                    {% endif %}
+                {% endif %}
+                <li><a href="{{ url_for('logout') }}">Logout ({{ current_user.name }})</a></li>
+            {% else %}
+                <li><a href="{{ url_for('login') }}">Login</a></li>
+                <li><a href="{{ url_for('signup') }}" class="btn-primary">Sign Up</a></li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>
+
+<div class="flash-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, msg in messages %}
+            <div class="flash flash-{{ category }}">{{ msg }}</div>
+        {% endfor %}
+    {% endwith %}
+</div>
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+    <div class="footer-container">
+
+        <!-- LEFT: Logo -->
+        <div class="footer-logo-box">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="InternHub" class="footer-logo" onerror="this.style.display='none';">
+            <h3>BYTE AND BUILD</h3>
+            <p class="footer-tagline">Internships • Live Classes • Certifications</p>
+        </div>
+
+        <!-- MIDDLE: Contact -->
+        <div class="footer-contact-box">
+            <h4>Get In Touch</h4>
+            <a href="https://www.instagram.com/byteandbuild0?stkn=NnJwYzhnZjF4c3h0" target="_blank" class="footer-contact-item">
+                <span class="footer-icon">📷</span>
+                <span>@byteandbuild0</span>
+            </a>
+            <a href="mailto:info@internhub.com" class="footer-contact-item">
+                <span class="footer-icon">📧</span>
+                <span>byteandbuild0@gmail.com</span>
+            </a>
+            <a href="tel:+919876543210" class="footer-contact-item">
+                <span class="footer-icon">📱</span>
+                <span>+91 8168696551</span>
+            </a>
+        </div>
+
+        <!-- RIGHT: MSME -->
+        <div class="footer-msme-box">
+            <h4>Registered Business</h4>
+            <div class="footer-msme-badge">
+                <span class="footer-icon">🏛️</span>
+                <div>
+                    <p class="footer-msme-label">MSME (Udyam) Registered</p>
+                    <p class="footer-msme-number">UDYAM-HR-16-0046952</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BOTTOM -->
+    <div class="footer-bottom">
+        <p>Made with <span class="heart">❤️</span> by <strong>Byte and Build</strong></p>
+        <p class="footer-copy">&copy; 2025 Byte and Build. All rights reserved.</p>
+    </div>
+</footer>
+
+<script>
+function toggleMenu() {
+    document.getElementById('navMenu').classList.toggle('open');
+}
+document.querySelectorAll('.nav-menu a').forEach(link => {
+    link.addEventListener('click', () => {
+        document.getElementById('navMenu').classList.remove('open');
+    });
+});
+</script>
+</body>
+</html>

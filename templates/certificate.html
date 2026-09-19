@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container" style="max-width:900px;">
+
+    <!-- Action buttons (hidden when printing) -->
+    <div class="cert-actions no-print">
+        <a href="{{ url_for('my_certificates') }}" class="btn-secondary">← Back</a>
+        <button onclick="window.print()" class="btn-primary">🖨️ Print / Save as PDF</button>
+    </div>
+
+    <!-- The Certificate -->
+    <div class="certificate-outer">
+        <div class="certificate-inner">
+
+            <div class="cert-top">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Byte and Build" class="cert-logo">
+                <p class="cert-issuer">BYTE AND BUILD</p>
+                <p class="cert-issuer-sub">MSME Registered • Government of India</p>
+            </div>
+
+            <h1 class="cert-title">Certificate of Completion</h1>
+            <p class="cert-subtitle">This is to certify that</p>
+
+            <h2 class="cert-student">{{ cert.user.name }}</h2>
+
+            <p class="cert-text">has successfully completed the internship program</p>
+
+            <h3 class="cert-internship">{{ cert.internship.title }}</h3>
+
+            <p class="cert-details">
+                Duration: <strong>{{ cert.internship.duration or '—' }}</strong>
+                &nbsp;•&nbsp;
+                Average Score: <strong>{{ cert.avg_score }}%</strong>
+                {% if cert.total_quizzes %}
+                    &nbsp;•&nbsp;
+                    Quizzes Passed: <strong>{{ cert.total_quizzes }}</strong>
+                {% endif %}
+            </p>
+
+            <p class="cert-text">demonstrating commitment, skill, and dedication to learning.</p>
+
+            <div class="cert-bottom">
+                <div class="cert-bottom-left">
+                    <p class="cert-label">Certificate ID</p>
+                    <p class="cert-code">{{ cert.code }}</p>
+                    <p class="cert-label" style="margin-top:15px;">Issued On</p>
+                    <p class="cert-date">{{ cert.issued_at.strftime('%d %B %Y') }}</p>
+                </div>
+
+                <div class="cert-bottom-center">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data={{ verify_url }}"
+                         alt="Verify QR" class="cert-qr">
+                    <p class="cert-qr-caption">Scan to verify</p>
+                </div>
+
+                <div class="cert-bottom-right">
+                    <p class="cert-signature">Byte and Build</p>
+                    <div class="cert-sign-line"></div>
+                    <p class="cert-label">Authorized Signature</p>
+                </div>
+            </div>
+
+            <p class="cert-verify-link">
+                Verify at: <strong>{{ verify_url }}</strong>
+            </p>
+
+        </div>
+    </div>
+
+</div>
+
+<style>
+    @media print {
+        .no-print, .navbar, .site-footer, .flash-container { display: none !important; }
+        .container { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+        .certificate-outer { box-shadow: none !important; margin: 0 !important; }
+        body { background: #fff !important; }
+    }
+</style>
+{% endblock %}

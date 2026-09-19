@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Hero Section -->
+<section class="hero">
+    <h1>Find Your Dream Internship</h1>
+    <p>Free & paid internships with video lessons and quizzes</p>
+    {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('signup') }}" class="btn-primary big">Get Started Free</a>
+    {% endif %}
+</section>
+
+<!-- About Section -->
+<section id="about" class="about-section">
+    <div class="about-container">
+        <h2>{{ settings.about_title }}</h2>
+        <p class="tagline">{{ settings.about_tagline }}</p>
+
+        <div class="about-grid">
+            <div class="about-card">
+                <div class="about-icon">{{ settings.about_card_1_icon }}</div>
+                <h3>{{ settings.about_card_1_title }}</h3>
+                <p>{{ settings.about_card_1_text }}</p>
+            </div>
+
+            <div class="about-card">
+                <div class="about-icon">{{ settings.about_card_2_icon }}</div>
+                <h3>{{ settings.about_card_2_title }}</h3>
+                <p>{{ settings.about_card_2_text }}</p>
+            </div>
+
+            <div class="about-card">
+                <div class="about-icon">{{ settings.about_card_3_icon }}</div>
+                <h3>{{ settings.about_card_3_title }}</h3>
+                <p>{{ settings.about_card_3_text }}</p>
+            </div>
+        </div>
+
+        <!-- Certificates Section -->
+        <div class="certificates-section">
+            <h2>{{ settings.cert_title }}</h2>
+            <p class="tagline">{{ settings.cert_tagline }}</p>
+
+            <div class="cert-grid">
+                <div class="cert-card">
+                    <div class="cert-badge">{{ settings.cert_card_1_badge }}</div>
+                    <h3>{{ settings.cert_card_1_title }}</h3>
+                    <p>{{ settings.cert_card_1_text }}</p>
+                </div>
+
+                <div class="cert-card">
+                    <div class="cert-badge">{{ settings.cert_card_2_badge }}</div>
+                    <h3>{{ settings.cert_card_2_title }}</h3>
+                    <p>{{ settings.cert_card_2_text }}</p>
+                </div>
+
+                <div class="cert-card">
+                    <div class="cert-badge">{{ settings.cert_card_3_badge }}</div>
+                    <h3>{{ settings.cert_card_3_title }}</h3>
+                    <p>{{ settings.cert_card_3_text }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Why Choose Us -->
+        <div class="why-us">
+            <h2>{{ settings.why_title }}</h2>
+            <div class="why-grid">
+                <div class="why-item"><span>✅</span> {{ settings.why_item_1 }}</div>
+                <div class="why-item"><span>✅</span> {{ settings.why_item_2 }}</div>
+                <div class="why-item"><span>✅</span> {{ settings.why_item_3 }}</div>
+                <div class="why-item"><span>✅</span> {{ settings.why_item_4 }}</div>
+                <div class="why-item"><span>✅</span> {{ settings.why_item_5 }}</div>
+                <div class="why-item"><span>✅</span> {{ settings.why_item_6 }}</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Internships -->
+<section class="internships-section">
+    <h2>Featured Internships</h2>
+    <div class="internship-grid">
+        {% for i in internships %}
+            <div class="internship-card">
+                <h3>{{ i.title }}</h3>
+                <p>{{ i.description[:100] }}...</p>
+                <div class="tags">
+                    <span>{{ i.category }}</span>
+                    <span>{{ i.duration }}</span>
+                    <span class="price">{{ 'Free' if not i.is_paid else '₹' ~ i.price }}</span>
+                </div>
+                <a href="{{ url_for('internship_detail', iid=i.id) }}" class="btn-primary">View</a>
+            </div>
+        {% else %}
+            <p>No internships yet. Check back soon!</p>
+        {% endfor %}
+    </div>
+</section>
+
+{% endblock %}

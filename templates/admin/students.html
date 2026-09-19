@@ -1,0 +1,16 @@
+{% extends 'admin/admin_base.html' %}
+{% block admin_content %}
+<h2>Students</h2>
+<table class="admin-table">
+    <tr><th>Name</th><th>Email</th><th>Phone</th><th>School</th><th></th></tr>
+    {% for s in students %}
+    <tr>
+        <td>{{ s.name }}</td>
+        <td>{{ s.email }}</td>
+        <td>{{ s.phone }}</td>
+        <td>{{ s.school.name if s.school else '-' }}</td>
+        <td><a href="{{ url_for('admin_student_detail', uid=s.id) }}">View</a></td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

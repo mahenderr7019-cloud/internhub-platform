@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+    <h2>My Internships</h2>
+    {% for e in enrollments %}
+        <div class="card">
+            <h3>{{ e.internship.title }}</h3>
+            <p>Status: <span class="badge">{{ e.payment_status }}</span></p>
+            <p>Enrolled: {{ e.enrolled_at.strftime('%d %b %Y') }}</p>
+            <a href="{{ url_for('internship_detail', iid=e.internship.id) }}" class="btn-primary">Continue</a>
+        </div>
+    {% else %}
+        <p>You haven't enrolled yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

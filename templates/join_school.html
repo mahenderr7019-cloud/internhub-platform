@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="auth-container">
+    <h2>🏫 Join Your School</h2>
+    <p class="small">Enter the unique school code your school provided. Once linked, you'll get access to live classes and recordings.</p>
+    <form method="POST">
+        <input type="text" name="code" placeholder="e.g. A1B2C3D4" required style="text-transform:uppercase;letter-spacing:2px;text-align:center;font-size:1.2rem;font-weight:700;">
+        <button type="submit" class="btn-primary">Join School</button>
+    </form>
+    <p style="text-align:center;margin-top:20px;">
+        <a href="{{ url_for('student_dashboard') }}">← Back to Dashboard</a>
+    </p>
+</div>
+{% endblock %}

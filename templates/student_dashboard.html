@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+
+    <!-- Profile Card -->
+    <div class="dashboard-profile-card">
+        <div class="profile-left">
+            {% if current_user.photo %}
+                <img src="{{ url_for('static', filename=current_user.photo) }}" alt="Profile" class="dashboard-photo">
+            {% else %}
+                <div class="dashboard-photo-placeholder">{{ current_user.name[0] | upper }}</div>
+            {% endif %}
+            <div class="profile-details">
+                <h2>{{ current_user.name }}</h2>
+                <p>📧 {{ current_user.email }}</p>
+                <p>📱 {{ current_user.phone }}</p>
+                {% if current_user.school %}
+                    <p>🏫 {{ current_user.school.name }}</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="profile-actions">
+            <a href="{{ url_for('profile') }}" class="btn-primary">✏️ Edit Profile</a>
+        </div>
+    </div>
+
+    <!-- School Link Banner -->
+    {% if current_user.school_id %}
+        <div class="school-linked-banner">
+            🏫 You're linked to <strong>{{ current_user.school.name }}</strong>.
+            <a href="{{ url_for('school_classes') }}" class="btn-primary" style="margin-left:10px;">View School Classes →</a>
+            <form method="POST" action="{{ url_for('leave_school') }}" style="display:inline;margin-left:10px;">
+                <button type="submit" class="link-danger" onclick="return confirm('Leave this school?')">Leave School</button>
+            </form>
+        </div>
+    {% else %}
+        <div class="school-not-linked-banner">
+            🏫 Not linked to any school?
+            <a href="{{ url_for('join_school') }}" class="btn-primary" style="margin-left:10px;">Join With School Code →</a>
+        </div>
+    {% endif %}
+
+    <!-- Available Internships -->
+    <h3 style="margin-top:30px;">Available Internships</h3>
+    <div class="internship-grid">
+        {% for i in internships %}
+            <div class="internship-card">
+                <h3>{{ i.title }}</h3>
+                <p>{{ i.description[:100] }}...</p>
+                <div class="tags">
+                    <span>{{ i.category }}</span>
+                    <span>{{ i.duration }}</span>
+                    <span class="price">{{ 'Free' if not i.is_paid else '₹' ~ i.price }}</span>
+                </div>
+                <a href="{{ url_for('internship_detail', iid=i.id) }}" class="btn-primary">View</a>
+            </div>
+        {% else %}
+            <p style="color:#888;">No internships available yet.</p>
+        {% endfor %}
+    </div>
+
+    <!-- My Enrollments -->
+    <h3 style="margin-top:30px;">My Enrollments</h3>
+    {% if enrollments %}
+        <div class="enrollments-list">
+            {% for e in enrollments %}
+                <div class="enrollment-row">
+                    <div>
+                        <strong>{{ e.internship.title }}</strong>
+                        <span class="badge">{{ e.payment_status }}</span>
+                    </div>
+                    <a href="{{ url_for('internship_detail', iid=e.internship.id) }}" class="btn-primary">Open →</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="color:#888;">You haven't enrolled in any internship yet.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

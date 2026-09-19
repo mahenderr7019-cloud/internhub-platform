@@ -1,0 +1,24 @@
+{% extends 'admin/admin_base.html' %}
+{% block admin_content %}
+<h2>{{ 'Edit' if internship else 'New' }} Internship</h2>
+<form method="POST" class="admin-form">
+    <label>Title</label>
+    <input name="title" value="{{ internship.title if internship else '' }}" required>
+
+    <label>Description</label>
+    <textarea name="description" rows="4" required>{{ internship.description if internship else '' }}</textarea>
+
+    <label>Category</label>
+    <input name="category" value="{{ internship.category if internship else '' }}">
+
+    <label>Duration</label>
+    <input name="duration" value="{{ internship.duration if internship else '' }}">
+
+    <label>Price (₹)</label>
+    <input type="number" name="price" step="0.01" value="{{ internship.price if internship else 0 }}">
+
+    <label><input type="checkbox" name="is_paid" {% if internship and internship.is_paid %}checked{% endif %}> Paid Internship</label>
+
+    <button type="submit" class="btn-primary">Save</button>
+</form>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+    <h2>My Profile</h2>
+
+    <div class="profile-card">
+        <div class="profile-photo-wrap">
+            {% if current_user.photo %}
+                <img src="{{ url_for('static', filename=current_user.photo) }}" alt="Profile" class="profile-photo">
+            {% else %}
+                <div class="profile-photo-placeholder">{{ current_user.name[0] | upper }}</div>
+            {% endif %}
+        </div>
+
+        <div class="profile-info">
+            <h3>{{ current_user.name }}</h3>
+            <p>📧 {{ current_user.email }}</p>
+            <p>📱 {{ current_user.phone }}</p>
+            {% if current_user.school %}
+                <p>🏫 {{ current_user.school.name }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="profile-edit-grid">
+        <!-- Photo Upload -->
+        <div class="profile-edit-box">
+            <h3>📷 Update Photo</h3>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="file" name="photo" accept="image/*" required>
+                <button type="submit" class="btn-primary">Upload Photo</button>
+            </form>
+        </div>
+
+        <!-- Name Change -->
+        <div class="profile-edit-box">
+            <h3>👤 Change Name</h3>
+            <form method="POST">
+                <input type="text" name="name" value="{{ current_user.name }}" required>
+                <button type="submit" class="btn-primary">Update Name</button>
+            </form>
+        </div>
+
+        <!-- Email/Phone Change with OTP -->
+        <div class="profile-edit-box">
+            <h3>🔐 Change Email / Phone</h3>
+            <p class="small">For security, we'll send an OTP to verify.</p>
+
+            <form method="POST" action="{{ url_for('send_otp') }}" style="display:inline;">
+                <input type="hidden" name="target" value="email_phone">
+                <button type="submit" class="btn-primary" style="margin-bottom:15px;">Send OTP</button>
+            </form>
+
+            <form method="POST" action="{{ url_for('update_contact') }}">
+                <label>New Email</label>
+                <input type="email" name="new_email" value="{{ current_user.email }}">
+                <label>New Phone</label>
+                <input type="tel" name="new_phone" value="{{ current_user.phone }}">
+                <label>Enter OTP</label>
+                <input type="text" name="otp" placeholder="6-digit code" maxlength="6" required style="letter-spacing:5px;text-align:center;font-size:1.2rem;">
+                <button type="submit" class="btn-primary">Verify & Update</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

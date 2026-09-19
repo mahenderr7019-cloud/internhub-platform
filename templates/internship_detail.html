@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+    <h2>{{ internship.title }}</h2>
+    <p>{{ internship.description }}</p>
+    <p><strong>Category:</strong> {{ internship.category }} | <strong>Duration:</strong> {{ internship.duration }}</p>
+    <p><strong>Price:</strong> {{ 'Free' if not internship.is_paid else '₹' ~ internship.price }}</p>
+
+    {% if not enrollment %}
+        <form method="POST" action="{{ url_for('enroll', iid=internship.id) }}">
+            <button class="btn-primary big">
+                {{ 'Enroll Free' if not internship.is_paid else 'Pay ₹' ~ internship.price ~ ' & Enroll' }}
+            </button>
+        </form>
+
+    {% elif enrollment.payment_status == 'pending' %}
+        <div class="alert-warn">
+            ⏳ Your payment is pending. 
+            <a href="{{ url_for('payment_page', iid=internship.id) }}" class="btn-primary" style="margin-left:10px;">💳 Complete Payment</a>
+        </div>
+
+    {% else %}
+        <h3 style="margin-top:30px;">Playlist</h3>
+        {% for c in contents %}
+            <div class="content-item">
+                <h4>{{ loop.index }}. {{ c.title }} <span class="badge">{{ c.type }}</span></h4>
+
+                {% if c.type == 'video' %}
+                    <div class="video-tracker" data-content-id="{{ c.id }}" data-video-url="{{ c.video_url }}">
+                        <div class="video-container">
+                            <div id="player_{{ c.id }}"></div>
+                        </div>
+                        <p class="watch-status" id="status_{{ c.id }}">
+                            {% if progress_map.get(c.id) and progress_map[c.id].completed %}
+                                ✅ Completed (Score: {{ progress_map[c.id].score }})
+                            {% else %}
+                                ▶️ Watch the full video to unlock the button below
+                            {% endif %}
+                        </p>
+                        <button class="btn-primary mark-btn" id="markBtn_{{ c.id }}"
+                                onclick="markVideoWatched({{ c.id }})"
+                                {% if progress_map.get(c.id) and progress_map[c.id].completed %}disabled{% endif %}>
+                            {% if progress_map.get(c.id) and progress_map[c.id].completed %}
+                                ✅ Already Marked
+                            {% else %}
+                                ✔️ Mark as Watched
+                            {% endif %}
+                        </button>
+                    </div>
+                {% elif c.type == 'quiz' %}
+                    <div class="quiz" data-quiz='{{ c.quiz_data | safe }}' data-content-id="{{ c.id }}"></div>
+                    {% if progress_map.get(c.id) and progress_map[c.id].completed %}
+                        <p class="done">✅ Completed (Score: {{ progress_map[c.id].score }})</p>
+                    {% endif %}
+                {% endif %}
+            </div>
+        {% else %}
+            <p>No content added yet.</p>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% endblock %}

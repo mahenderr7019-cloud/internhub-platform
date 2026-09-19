@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="auth-container" style="max-width:500px;text-align:center;">
+    <h2>Complete Payment</h2>
+
+    <div style="background:#f9fafb;padding:20px;border-radius:10px;margin:20px 0;text-align:left;">
+        <p style="margin:5px 0;"><strong>Internship:</strong> {{ internship.title }}</p>
+        <p style="margin:5px 0;"><strong>Duration:</strong> {{ internship.duration }}</p>
+        <p style="margin:5px 0;"><strong>Category:</strong> {{ internship.category }}</p>
+        <hr style="margin:15px 0;">
+        <p style="margin:5px 0;font-size:1.3rem;font-weight:700;color:#667eea;">
+            Amount: ₹{{ internship.price }}
+        </p>
+    </div>
+
+    <button id="payBtn" class="btn-primary big" style="width:100%;">
+        💳 Pay ₹{{ internship.price }} with Razorpay
+    </button>
+
+    <p style="margin-top:15px;font-size:0.85rem;color:#666;">
+        🔒 Secure payment via Razorpay. Test mode — use test card details.
+    </p>
+
+    <p style="margin-top:10px;font-size:0.85rem;">
+        <a href="{{ url_for('internship_detail', iid=internship.id) }}">← Cancel and go back</a>
+    </p>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    const razorpayKey = "{{ razorpay_key }}";
+    const orderId = "{{ order.id }}";
+    const amount = {{ order.amount }};
+    const enrollmentId = {{ enrollment.id }};
+    const internshipTitle = "{{ internship.title }}";
+
+    const options = {
+        "key": razorpayKey,
+        "amount": amount,
+        "currency": "INR",
+        "name": "InternHub",
+        "description": "Payment for " + internshipTitle,
+        "order_id": orderId,
+        "handler": function (response) {
+            // Send to backend for verification
+            fetch('/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                    razorpay_signature: response.razorpay_signature,
+                    enrollment_id: enrollmentId
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Payment successful! Internship unlocked.');
+                    window.location.href = "{{ url_for('internship_detail', iid=internship.id) }}";
+                } else {
+                    alert('❌ Payment verification failed: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                alert('❌ Server error during verification.');
+                console.error(err);
+            });
+        },
+        "prefill": {
+            "name": "{{ current_user.name }}",
+            "email": "{{ current_user.email }}",
+            "contact": "{{ current_user.phone }}"
+        },
+        "theme": {
+            "color": "#667eea"
+        },
+        "modal": {
+            "ondismiss": function() {
+                console.log('Payment cancelled');
+            }
+        }
+    };
+
+    document.getElementById('payBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        const rzp = new Razorpay(options);
+        rzp.open();
+    });
+</script>
+{% endblock %}

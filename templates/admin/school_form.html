@@ -1,0 +1,51 @@
+{% extends 'admin/admin_base.html' %}
+{% block admin_content %}
+<h2>{{ 'Edit' if school else 'New' }} School</h2>
+
+{% if school %}
+<div style="background:#eef2ff;padding:15px;border-radius:8px;margin:15px 0;">
+    <strong>School Code:</strong>
+    <span style="font-family:monospace;font-size:1.3rem;font-weight:700;letter-spacing:2px;background:#fff;padding:8px 15px;border-radius:6px;margin-left:10px;">{{ school.code or '—' }}</span>
+    <form method="POST" action="{{ url_for('admin_school_regen_code', sid=school.id) }}" style="display:inline;margin-left:15px;">
+        <button class="link-danger" onclick="return confirm('Generate a new code? Old code will stop working.')">Regenerate Code</button>
+    </form>
+    <p style="margin:10px 0 0;font-size:0.9rem;color:#555;">Share this code with students. They enter it during signup to unlock live classes.</p>
+</div>
+{% endif %}
+
+<form method="POST" class="admin-form">
+    <label>School Name</label>
+    <input name="name" value="{{ school.name if school else '' }}" required>
+
+    <label>Contact Email</label>
+    <input name="contact_email" value="{{ school.contact_email if school else '' }}">
+
+    <label>Contact Phone</label>
+    <input name="contact_phone" value="{{ school.contact_phone if school else '' }}">
+
+    <label>Monthly Fee (₹)</label>
+    <input type="number" name="monthly_fee" step="0.01" value="{{ school.monthly_fee if school else 0 }}">
+
+    <label><input type="checkbox" name="is_active" {% if not school or school.is_active %}checked{% endif %}> Active</label>
+
+    <button type="submit" class="btn-primary">Save</button>
+</form>
+
+{% if school %}
+<hr>
+<h3>Approve Students (CSV: email,phone – one per line)</h3>
+<form method="POST" action="{{ url_for('admin_school_approve_students', sid=school.id) }}">
+    <textarea name="students" rows="6" placeholder="student1@school.com,9876543210&#10;student2@school.com,9876543211" style="width:100%;padding:10px;"></textarea>
+    <button type="submit" class="btn-primary" style="margin-top:10px;">Add to Approved List</button>
+</form>
+
+<h4 style="margin-top:20px;">Currently Approved:</h4>
+<ul>
+    {% for a in school.approved_students %}
+        <li>{{ a.email }} – {{ a.phone }} {{ '✅ registered' if a.is_registered else '' }}</li>
+    {% else %}
+        <li>No students added yet.</li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

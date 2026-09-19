@@ -1,0 +1,95 @@
+{% extends 'admin/admin_base.html' %}
+{% block admin_content %}
+<h2>✏️ Edit Homepage Content</h2>
+<p style="color:#666;margin-bottom:20px;">Changes here instantly update your homepage About section.</p>
+
+<form method="POST" class="admin-form" style="max-width:700px;">
+
+    <h3 style="margin-top:20px;color:#667eea;">About Section</h3>
+
+    <label>Title</label>
+    <input name="about_title" value="{{ settings.about_title }}">
+
+    <label>Tagline</label>
+    <input name="about_tagline" value="{{ settings.about_tagline }}">
+
+    <h4 style="margin-top:20px;">About Card 1</h4>
+    <label>Icon (emoji)</label>
+    <input name="about_card_1_icon" value="{{ settings.about_card_1_icon }}">
+    <label>Title</label>
+    <input name="about_card_1_title" value="{{ settings.about_card_1_title }}">
+    <label>Text</label>
+    <textarea name="about_card_1_text" rows="3">{{ settings.about_card_1_text }}</textarea>
+
+    <h4 style="margin-top:20px;">About Card 2</h4>
+    <label>Icon (emoji)</label>
+    <input name="about_card_2_icon" value="{{ settings.about_card_2_icon }}">
+    <label>Title</label>
+    <input name="about_card_2_title" value="{{ settings.about_card_2_title }}">
+    <label>Text</label>
+    <textarea name="about_card_2_text" rows="3">{{ settings.about_card_2_text }}</textarea>
+
+    <h4 style="margin-top:20px;">About Card 3</h4>
+    <label>Icon (emoji)</label>
+    <input name="about_card_3_icon" value="{{ settings.about_card_3_icon }}">
+    <label>Title</label>
+    <input name="about_card_3_title" value="{{ settings.about_card_3_title }}">
+    <label>Text</label>
+    <textarea name="about_card_3_text" rows="3">{{ settings.about_card_3_text }}</textarea>
+
+    <hr style="margin:30px 0;">
+
+    <h3 style="color:#667eea;">Certificates Section</h3>
+    <label>Title</label>
+    <input name="cert_title" value="{{ settings.cert_title }}">
+    <label>Tagline</label>
+    <input name="cert_tagline" value="{{ settings.cert_tagline }}">
+
+    <h4 style="margin-top:20px;">Certificate 1</h4>
+    <label>Badge (emoji)</label>
+    <input name="cert_card_1_badge" value="{{ settings.cert_card_1_badge }}">
+    <label>Title</label>
+    <input name="cert_card_1_title" value="{{ settings.cert_card_1_title }}">
+    <label>Text</label>
+    <textarea name="cert_card_1_text" rows="3">{{ settings.cert_card_1_text }}</textarea>
+
+    <h4 style="margin-top:20px;">Certificate 2</h4>
+    <label>Badge (emoji)</label>
+    <input name="cert_card_2_badge" value="{{ settings.cert_card_2_badge }}">
+    <label>Title</label>
+    <input name="cert_card_2_title" value="{{ settings.cert_card_2_title }}">
+    <label>Text</label>
+    <textarea name="cert_card_2_text" rows="3">{{ settings.cert_card_2_text }}</textarea>
+
+    <h4 style="margin-top:20px;">Certificate 3</h4>
+    <label>Badge (emoji)</label>
+    <input name="cert_card_3_badge" value="{{ settings.cert_card_3_badge }}">
+    <label>Title</label>
+    <input name="cert_card_3_title" value="{{ settings.cert_card_3_title }}">
+    <label>Text</label>
+    <textarea name="cert_card_3_text" rows="3">{{ settings.cert_card_3_text }}</textarea>
+
+    <hr style="margin:30px 0;">
+
+    <h3 style="color:#667eea;">Why Choose Us</h3>
+    <label>Title</label>
+    <input name="why_title" value="{{ settings.why_title }}">
+
+    <label>Item 1</label>
+    <input name="why_item_1" value="{{ settings.why_item_1 }}">
+    <label>Item 2</label>
+    <input name="why_item_2" value="{{ settings.why_item_2 }}">
+    <label>Item 3</label>
+    <input name="why_item_3" value="{{ settings.why_item_3 }}">
+    <label>Item 4</label>
+    <input name="why_item_4" value="{{ settings.why_item_4 }}">
+    <label>Item 5</label>
+    <input name="why_item_5" value="{{ settings.why_item_5 }}">
+    <label>Item 6</label>
+    <input name="why_item_6" value="{{ settings.why_item_6 }}">
+
+    <button type="submit" class="btn-primary" style="margin-top:25px;padding:12px 30px;">
+        💾 Save Changes
+    </button>
+</form>
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends 'admin/admin_base.html' %}
+{% block admin_content %}
+<h2>Playlist – {{ internship.title }}</h2>
+
+<h3 style="margin-top:20px;">Existing Content</h3>
+
+{% if internship.contents %}
+    <div class="content-preview-grid">
+        {% for c in internship.contents %}
+            <div class="content-preview-card">
+                <div class="content-preview-header">
+                    <span class="content-order">#{{ loop.index }}</span>
+                    <span class="badge">{{ c.type }}</span>
+                    <a href="{{ url_for('admin_content_edit', cid=c.id) }}" class="link-edit">Edit</a>
+                    <form method="POST" action="{{ url_for('admin_content_delete', cid=c.id) }}" style="margin-left:auto;" onsubmit="return confirm('Delete?')">
+                        <button class="link-danger">Delete</button>
+                    </form>
+                </div>
+                <h4>{{ c.title }}</h4>
+
+                {% if c.type == 'video' %}
+                    {% if c.video_url %}
+                        <div class="video-preview">
+                            <iframe src="{{ c.video_url }}" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                    {% else %}
+                        <p class="no-content">⚠️ No video URL set</p>
+                    {% endif %}
+                {% else %}
+                    <div class="quiz-preview">
+                        {% set quiz = c.quiz_data | fromjson if c.quiz_data else [] %}
+                        <p><strong>{{ quiz|length }} question(s)</strong></p>
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p style="color:#888;">No content yet.</p>
+{% endif %}
+
+<hr style="margin:40px 0;">
+
+<h3>Add New Content</h3>
+<form method="POST" action="{{ url_for('admin_content_add', iid=internship.id) }}" class="admin-form" id="contentForm">
+    <label>Type</label>
+    <select name="type" id="typeSelect" onchange="toggleContentFields()">
+        <option value="video">Video</option>
+        <option value="quiz">Quiz</option>
+    </select>
+
+    <label>Title</label>
+    <input name="title" id="contentTitle" required>
+
+    <label>Order</label>
+    <input type="number" name="order" value="0">
+
+    <div id="videoFields">
+        <label>YouTube URL (any format — watch, share, or embed)</label>
+        <input name="video_url" placeholder="https://youtu.be/... or https://www.youtube.com/watch?v=...">
+        <small style="color:#888;">We automatically convert it to embed format.</small>
+    </div>
+
+    <div id="quizFields" style="display:none">
+        <label>Quiz Questions</label>
+        <div id="questionsContainer"></div>
+        <button type="button" class="btn-secondary" onclick="addQuestion()" style="margin-top:10px;">+ Add Another Question</button>
+        <input type="hidden" name="quiz_data" id="quizDataInput">
+    </div>
+
+    <button type="submit" class="btn-primary" style="margin-top:20px;">Add Content</button>
+</form>
+
+<script>
+const container = document.getElementById('questionsContainer');
+let qCount = 0;
+
+function addQuestion(prefill = null) {
+    qCount++;
+    const idx = qCount;
+    const div = document.createElement('div');
+    div.className = 'question-block';
+    div.dataset.idx = idx;
+    div.style.cssText = 'background:#f9fafb;padding:15px;border-radius:8px;margin-bottom:15px;border-left:4px solid #667eea;';
+
+    div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <strong>Question ${idx}</strong>
+            <button type="button" class="link-danger" onclick="this.closest('.question-block').remove()">Remove</button>
+        </div>
+        <input class="q-text" placeholder="Enter question text" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px;">
+        <label style="font-size:0.9rem;color:#555;">Options (fill all 4, correct one marked below):</label>
+        <input class="q-opt" data-i="0" placeholder="Option A" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:5px;">
+        <input class="q-opt" data-i="1" placeholder="Option B" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:5px;">
+        <input class="q-opt" data-i="2" placeholder="Option C" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:5px;">
+        <input class="q-opt" data-i="3" placeholder="Option D" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px;">
+        <label style="font-size:0.9rem;color:#555;">Which option is the correct answer?</label>
+        <select class="q-answer" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            <option value="0">Option A</option>
+            <option value="1">Option B</option>
+            <option value="2">Option C</option>
+            <option value="3">Option D</option>
+        </select>
+    `;
+    container.appendChild(div);
+}
+
+function toggleContentFields() {
+    const t = document.getElementById('typeSelect').value;
+    document.getElementById('videoFields').style.display = t === 'video' ? 'block' : 'none';
+    document.getElementById('quizFields').style.display = t === 'quiz' ? 'block' : 'none';
+    if (t === 'quiz' && container.children.length === 0) {
+        addQuestion();
+    }
+}
+
+document.getElementById('contentForm').addEventListener('submit', function(e) {
+    const t = document.getElementById('typeSelect').value;
+    if (t === 'quiz') {
+        const questions = [];
+        let valid = true;
+        document.querySelectorAll('#questionsContainer .question-block').forEach(block => {
+            const qText = block.querySelector('.q-text').value.trim();
+            const opts = [...block.querySelectorAll('.q-opt')].map(o => o.value.trim()).filter(Boolean);
+            const answerIdx = parseInt(block.querySelector('.q-answer').value);
+            if (!qText || opts.length < 2) {
+                valid = false;
+                return;
+            }
+            const correctAnswer = opts[answerIdx] || opts[0];
+            questions.push({ q: qText, options: opts, answer: correctAnswer });
+        });
+        if (!valid || questions.length === 0) {
+            e.preventDefault();
+            alert('Please fill in each question properly.');
+            return;
+        }
+        document.getElementById('quizDataInput').value = JSON.stringify(questions);
+    }
+});
+
+// Initialize video view
+toggleContentFields();
+</script>
+{% endblock %}

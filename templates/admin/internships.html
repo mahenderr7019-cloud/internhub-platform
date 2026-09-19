@@ -1,0 +1,22 @@
+{% extends 'admin/admin_base.html' %}
+{% block admin_content %}
+<h2>Internships</h2>
+<a href="{{ url_for('admin_internship_new') }}" class="btn-primary">+ New Internship</a>
+<table class="admin-table">
+    <tr><th>Title</th><th>Price</th><th>Category</th><th>Actions</th></tr>
+    {% for i in internships %}
+    <tr>
+        <td>{{ i.title }}</td>
+        <td>{{ 'Free' if not i.is_paid else '₹' ~ i.price }}</td>
+        <td>{{ i.category }}</td>
+        <td>
+            <a href="{{ url_for('admin_internship_content', iid=i.id) }}">Content</a> |
+            <a href="{{ url_for('admin_internship_edit', iid=i.id) }}">Edit</a> |
+            <form method="POST" action="{{ url_for('admin_internship_delete', iid=i.id) }}" style="display:inline" onsubmit="return confirm('Delete?')">
+                <button class="link-danger">Delete</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+    <h2>My Internships</h2>
+
+    {% if enrollments %}
+        <div class="internship-grid" style="margin-top:20px;">
+            {% for e in enrollments %}
+                <div class="internship-card">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                        <h3>{{ e.internship.title }}</h3>
+                        <span class="badge">{{ e.payment_status }}</span>
+                    </div>
+                    <p style="color:#666;font-size:0.9rem;">{{ e.internship.description[:120] }}...</p>
+                    <p style="font-size:0.85rem;color:#888;">
+                        📅 Enrolled: {{ e.enrolled_at.strftime('%d %b %Y') }}
+                    </p>
+                    <p style="font-size:0.9rem;">
+                        <strong>Category:</strong> {{ e.internship.category }} |
+                        <strong>Duration:</strong> {{ e.internship.duration }}
+                    </p>
+                    <a href="{{ url_for('internship_detail', iid=e.internship.id) }}" class="btn-primary">
+                        Continue →
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="text-align:center;padding:60px 20px;background:#fff;border-radius:10px;margin-top:20px;">
+            <h3 style="color:#666;">You haven't enrolled in any internship yet</h3>
+            <p style="color:#888;margin:15px 0;">Browse the available internships and start learning today!</p>
+            <a href="{{ url_for('index') }}" class="btn-primary">Browse Internships</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

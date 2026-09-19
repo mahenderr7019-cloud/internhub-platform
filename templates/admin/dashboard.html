@@ -1,0 +1,10 @@
+{% extends 'admin/admin_base.html' %}
+{% block admin_content %}
+<h2>Admin Dashboard</h2>
+<div class="stats-grid">
+    <div class="stat-card"><h3>{{ stats.students }}</h3><p>Students</p></div>
+    <div class="stat-card"><h3>{{ stats.internships }}</h3><p>Internships</p></div>
+    <div class="stat-card"><h3>{{ stats.schools }}</h3><p>Schools</p></div>
+    <div class="stat-card"><h3>{{ stats.enrollments }}</h3><p>Enrollments</p></div>
+</div>
+{% endblock %}

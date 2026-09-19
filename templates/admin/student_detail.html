@@ -1,0 +1,43 @@
+{% extends 'admin/admin_base.html' %}
+{% block admin_content %}
+<h2>{{ student.name }}</h2>
+<p>Email: {{ student.email }} | Phone: {{ student.phone }}</p>
+<p>School: <strong>{{ student.school.name if student.school else 'Not linked' }}</strong></p>
+
+<hr style="margin:20px 0;">
+
+<h3>🔗 School Link</h3>
+<form method="POST" action="{{ url_for('admin_student_link_school', uid=student.id) }}" class="admin-form" style="max-width:400px;">
+    <label>Assign to School</label>
+    <select name="school_id">
+        <option value="">— Not linked —</option>
+        {% for s in schools %}
+            <option value="{{ s.id }}" {% if student.school_id == s.id %}selected{% endif %}>
+                {{ s.name }} ({{ s.code or 'no code' }})
+            </option>
+        {% endfor %}
+    </select>
+    <button type="submit" class="btn-primary">Update Link</button>
+</form>
+
+<hr style="margin:20px 0;">
+
+<h3>Enrollments</h3>
+<table class="admin-table">
+    <tr><th>Internship</th><th>Status</th><th>Progress</th><th>Enrolled</th></tr>
+    {% for e in student.enrollments %}
+    <tr>
+        <td>{{ e.internship.title }}</td>
+        <td>{{ e.payment_status }}</td>
+        <td>
+            {% set total = e.internship.contents | length %}
+            {% set done = e.progress | selectattr('completed') | list | length %}
+            {{ done }}/{{ total }}
+        </td>
+        <td>{{ e.enrolled_at.strftime('%d %b %Y') }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4">No enrollments yet.</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

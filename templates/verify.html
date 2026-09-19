@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container" style="max-width:700px;">
+    <div style="text-align:center;margin:30px 0;">
+        <h1 style="color:#667eea;">🔍 Verify a Certificate</h1>
+        <p style="color:#666;">Enter a Certificate ID to verify its authenticity</p>
+    </div>
+
+    <form method="POST" class="verify-form">
+        <input type="text" name="code" placeholder="e.g. IH-2025-XXXXXXXX"
+               value="{{ code }}" required
+               style="text-transform:uppercase;text-align:center;letter-spacing:2px;font-size:1.1rem;font-weight:600;">
+        <button type="submit" class="btn-primary big">Verify</button>
+    </form>
+
+    {% if searched %}
+        {% if cert %}
+            {% if cert.is_revoked %}
+                <div class="verify-result verify-fail">
+                    <h2>❌ Certificate Revoked</h2>
+                    <p><strong>Certificate ID:</strong> {{ cert.code }}</p>
+                    <p><strong>Reason:</strong> {{ cert.revoked_reason or 'Revoked by administrator' }}</p>
+                    <p style="margin-top:15px;font-size:0.9rem;">This certificate is no longer valid.</p>
+                </div>
+            {% else %}
+                <div class="verify-result verify-success">
+                    <div class="verify-badge">✅</div>
+                    <h2>Certificate Verified</h2>
+                    <p style="color:#16a34a;font-weight:600;">This is a valid certificate issued by Byte and Build.</p>
+
+                    <div class="verify-details">
+                        <div class="verify-row">
+                            <span class="verify-label">Certificate ID</span>
+                            <span class="verify-value">{{ cert.code }}</span>
+                        </div>
+                        <div class="verify-row">
+                            <span class="verify-label">Student Name</span>
+                            <span class="verify-value">{{ cert.user.name }}</span>
+                        </div>
+                        <div class="verify-row">
+                            <span class="verify-label">Internship</span>
+                            <span class="verify-value">{{ cert.internship.title }}</span>
+                        </div>
+                        <div class="verify-row">
+                            <span class="verify-label">Duration</span>
+                            <span class="verify-value">{{ cert.internship.duration or '—' }}</span>
+                        </div>
+                        <div class="verify-row">
+                            <span class="verify-label">Average Score</span>
+                            <span class="verify-value">{{ cert.avg_score }}%</span>
+                        </div>
+                        <div class="verify-row">
+                            <span class="verify-label">Issued On</span>
+                            <span class="verify-value">{{ cert.issued_at.strftime('%d %B %Y') }}</span>
+                        </div>
+                        <div class="verify-row">
+                            <span class="verify-label">Issued By</span>
+                            <span class="verify-value">Byte and Build</span>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="verify-result verify-fail">
+                <div class="verify-badge" style="color:#dc2626;">❌</div>
+                <h2>Certificate Not Found</h2>
+                <p>No certificate found with the ID: <strong>{{ code }}</strong></p>
+                <p style="font-size:0.9rem;color:#666;margin-top:10px;">Please check the ID and try again. Certificate IDs are case-insensitive.</p>
+            </div>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

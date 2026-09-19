@@ -1,0 +1,90 @@
+{% extends 'admin/admin_base.html' %}
+{% block admin_content %}
+<h2>Edit Content</h2>
+
+<form method="POST" class="admin-form" id="editForm">
+    <label>Title</label>
+    <input name="title" value="{{ content.title }}" required>
+
+    <label>Order</label>
+    <input type="number" name="order" value="{{ content.order or 0 }}">
+
+    {% if content.type == 'video' %}
+        <label>YouTube URL</label>
+        <input name="video_url" value="{{ content.video_url }}">
+        <small style="color:#888;">Any format works (watch, share, or embed). We auto-convert.</small>
+    {% else %}
+        <label>Quiz Questions</label>
+        <div id="questionsContainer"></div>
+        <button type="button" class="btn-secondary" onclick="addQuestion()" style="margin-top:10px;">+ Add Another Question</button>
+        <input type="hidden" name="quiz_data" id="quizDataInput">
+    {% endif %}
+
+    <div style="display:flex;gap:10px;margin-top:20px;">
+        <button type="submit" class="btn-primary">💾 Save Changes</button>
+        <a href="{{ url_for('admin_internship_content', iid=content.internship_id) }}" class="btn-primary" style="background:#888;">Cancel</a>
+    </div>
+</form>
+
+{% if content.type == 'quiz' %}
+<script>
+const container = document.getElementById('questionsContainer');
+let qCount = 0;
+const existingQuiz = {{ content.quiz_data | safe if content.quiz_data else '[]' }};
+
+function addQuestion(prefill = null) {
+    qCount++;
+    const div = document.createElement('div');
+    div.className = 'question-block';
+    div.style.cssText = 'background:#f9fafb;padding:15px;border-radius:8px;margin-bottom:15px;border-left:4px solid #667eea;';
+
+    const q = prefill || {};
+    const opts = q.options || ['', '', '', ''];
+    while (opts.length < 4) opts.push('');
+    const answerIdx = opts.indexOf(q.answer);
+    const selectedIdx = answerIdx >= 0 ? answerIdx : 0;
+
+    div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <strong>Question ${qCount}</strong>
+            <button type="button" class="link-danger" onclick="this.closest('.question-block').remove()">Remove</button>
+        </div>
+        <input class="q-text" placeholder="Question text" value="${(q.q || '').replace(/"/g, '&quot;')}" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-bottom:8px;">
+        <label style="font-size:0.9rem;color:#555;">Options:</label>
+        ${opts.map((o, i) => `<input class="q-opt" data-i="${i}" placeholder="Option ${String.fromCharCode(65+i)}" value="${o.replace(/"/g, '&quot;')}" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;margin-bottom:5px;">`).join('')}
+        <label style="font-size:0.9rem;color:#555;">Correct answer:</label>
+        <select class="q-answer" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;">
+            ${opts.map((_, i) => `<option value="${i}" ${i === selectedIdx ? 'selected' : ''}>Option ${String.fromCharCode(65+i)}</option>`).join('')}
+        </select>
+    `;
+    container.appendChild(div);
+}
+
+// Load existing questions
+if (Array.isArray(existingQuiz) && existingQuiz.length > 0) {
+    existingQuiz.forEach(q => addQuestion(q));
+} else {
+    addQuestion();
+}
+
+document.getElementById('editForm').addEventListener('submit', function(e) {
+    const questions = [];
+    let valid = true;
+    document.querySelectorAll('#questionsContainer .question-block').forEach(block => {
+        const qText = block.querySelector('.q-text').value.trim();
+        const opts = [...block.querySelectorAll('.q-opt')].map(o => o.value.trim()).filter(Boolean);
+        const answerIdx = parseInt(block.querySelector('.q-answer').value);
+        if (!qText || opts.length < 2) { valid = false; return; }
+        const correctAnswer = opts[answerIdx] || opts[0];
+        questions.push({ q: qText, options: opts, answer: correctAnswer });
+    });
+    if (!valid || questions.length === 0) {
+        e.preventDefault();
+        alert('Please fill in each question properly.');
+        return;
+    }
+    document.getElementById('quizDataInput').value = JSON.stringify(questions);
+});
+</script>
+{% endif %}
+{% endblock %}

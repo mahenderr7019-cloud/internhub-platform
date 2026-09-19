@@ -1,0 +1,81 @@
+{% extends 'admin/admin_base.html' %}
+{% block admin_content %}
+<h2>Classes – {{ school.name }}</h2>
+
+<div style="background:#eff6ff;padding:15px;border-radius:8px;border-left:4px solid #667eea;margin:15px 0;">
+    💡 <strong>How it works:</strong> Live classes use <strong>Jitsi Meet</strong> — a free video conferencing tool. 
+    When you mark a class as "LIVE", students will see the video room embedded on their page. 
+    You just need to join the room first as the mentor.
+</div>
+
+<h3>➕ Add New Class</h3>
+<form method="POST" class="admin-form">
+    <label>Class Title *</label>
+    <input name="title" required placeholder="e.g. Python Basics - Session 1">
+
+    <label>Description</label>
+    <textarea name="description" rows="3" placeholder="What will be taught in this class?"></textarea>
+
+    <label>Scheduled Time</label>
+    <input name="scheduled_time" placeholder="e.g. Monday 10:00 AM">
+
+    <label style="margin-top:15px;">
+        <input type="checkbox" name="is_live"> 
+        <strong>🔴 Mark as LIVE now</strong> (students will see the Jitsi room)
+    </label>
+
+    <label style="margin-top:15px;">📼 Recording URL (for past classes — optional)</label>
+    <input name="recording_url" placeholder="https://www.youtube.com/embed/VIDEO_ID">
+    <small style="color:#888;">Leave empty for live classes. Fill later with a recording.</small>
+
+    <button type="submit" class="btn-primary" style="margin-top:20px;">Add Class</button>
+</form>
+
+<hr style="margin:30px 0;">
+
+<h3>📚 Existing Classes</h3>
+
+{% if classes %}
+    <div style="display:grid;gap:15px;">
+        {% for c in classes %}
+            <div style="background:#fff;padding:20px;border-radius:10px;border-left:4px solid {% if c.is_live %}#dc2626{% else %}#667eea{% endif %};box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                    <div>
+                        <h4 style="margin:0 0 5px;">{{ c.title }}</h4>
+                        <p style="margin:0;color:#666;font-size:0.9rem;">{{ c.description or 'No description' }}</p>
+                        {% if c.scheduled_time %}
+                            <p style="margin:5px 0 0;color:#888;font-size:0.85rem;">🕒 {{ c.scheduled_time }}</p>
+                        {% endif %}
+                        {% if c.is_live %}
+                            <span style="display:inline-block;background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:12px;font-size:0.8rem;font-weight:700;margin-top:8px;">🔴 LIVE NOW</span>
+                        {% endif %}
+                        {% if c.recording_url %}
+                            <span style="display:inline-block;background:#eef2ff;color:#4338ca;padding:3px 10px;border-radius:12px;font-size:0.8rem;margin-top:8px;margin-left:5px;">📼 Recording attached</span>
+                        {% endif %}
+                    </div>
+                    <form method="POST" action="{{ url_for('admin_class_delete', cid=c.id) }}" onsubmit="return confirm('Delete this class?')">
+                        <button class="link-danger">Delete</button>
+                    </form>
+                </div>
+                {% if c.is_live %}
+    <div style="margin-top:12px;padding:12px;background:#fef3c7;border-radius:8px;">
+        <p style="margin:0 0 10px;font-size:0.9rem;color:#92400e;">
+            🎥 <strong>Jitsi room:</strong> 
+            <code style="background:#fff;padding:3px 8px;border-radius:4px;">InternHub-Class-{{ c.id }}</code>
+        </p>
+        <a href="https://meet.jit.si/InternHub-Class-{{ c.id }}" target="_blank" class="btn-primary" style="display:inline-block;text-decoration:none;">
+            🎬 Join Live Room (as Mentor)
+        </a>
+        <p style="margin:8px 0 0;font-size:0.8rem;color:#92400e;">
+            💡 Opens in a new tab. Join first, then students will see you when they join.
+        </p>
+    </div>
+{% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p style="color:#888;">No classes added yet.</p>
+{% endif %}
+
+{% endblock %}
