@@ -1069,20 +1069,22 @@ def init_db():
     with app.app_context():
         db.create_all()
 
-        # Safe auto-migration: add missing columns to existing tables
+        # Safe auto-migration using raw SQL via sqlalchemy.text
+        from sqlalchemy import text
+
         safe_column_additions = [
             ("internship_contents", "gumlet_video_id", "VARCHAR(100)"),
             ("users", "photo", "VARCHAR(300)"),
             ("schools", "code", "VARCHAR(20)"),
         ]
-        with db.engine.connect() as conn:
-            for table, column, col_type in safe_column_additions:
-                try:
-                    conn.execute(db.text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"))
-                    conn.commit()
-                    print(f"✅ Added missing column: {table}.{column}")
-                except Exception:
-                    pass  # Column already exists — safe to skip
+        for table, column, col_type in safe_column_additions:
+            try:
+                with db.engine.begin() as conn:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"))
+                print(f"✅ Added missing column: {table}.{column}")
+            except Exception as e:
+                # Column already exists OR other error - safe to skip
+                pass
 
         admin_email = app.config['ADMIN_EMAIL'].lower()
         if not User.query.filter_by(email=admin_email).first():
