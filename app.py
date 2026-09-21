@@ -513,6 +513,26 @@ def verify_payment():
 
 
 @app.route('/mark_complete/<int:content_id>', methods=['POST'])
+@app.route('/api/quiz/<int:content_id>')
+@login_required
+def api_get_quiz(content_id):
+    content = InternshipContent.query.get_or_404(content_id)
+    if content.type != 'quiz':
+        return jsonify({'error': 'Not a quiz'}), 400
+    try:
+        quiz = json.loads(content.quiz_data or '[]')
+    except Exception:
+        quiz = []
+    # Strip the 'answer' field for students (security — answers stay server-side)
+    public_quiz = []
+    for q in quiz:
+        public_quiz.append({
+            'q': q.get('q', ''),
+            'options': q.get('options', [])
+        })
+    return jsonify({'quiz': public_quiz})
+
+
 @login_required
 def mark_complete(content_id):
     content = InternshipContent.query.get_or_404(content_id)
