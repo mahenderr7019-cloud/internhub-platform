@@ -512,7 +512,6 @@ def verify_payment():
     return jsonify({'success': True, 'message': 'Payment verified!'})
 
 
-@app.route('/mark_complete/<int:content_id>', methods=['POST'])
 @app.route('/api/quiz/<int:content_id>')
 @login_required
 def api_get_quiz(content_id):
@@ -523,7 +522,6 @@ def api_get_quiz(content_id):
         quiz = json.loads(content.quiz_data or '[]')
     except Exception:
         quiz = []
-    # Strip the 'answer' field for students (security — answers stay server-side)
     public_quiz = []
     for q in quiz:
         public_quiz.append({
@@ -533,6 +531,7 @@ def api_get_quiz(content_id):
     return jsonify({'quiz': public_quiz})
 
 
+@app.route('/mark_complete/<int:content_id>', methods=['POST'])
 @login_required
 def mark_complete(content_id):
     content = InternshipContent.query.get_or_404(content_id)
@@ -580,8 +579,6 @@ def mark_complete(content_id):
                     'certificate_code': cert_code})
 
 
-@app.route('/my-internships')
-@login_required
 def my_internships():
     enrollments = Enrollment.query.filter_by(user_id=current_user.id).all()
     return render_template('my_internships.html', enrollments=enrollments)
