@@ -15,7 +15,7 @@
 
     {% elif enrollment.payment_status == 'pending' %}
         <div class="alert-warn">
-            ⏳ Your payment is pending. 
+            ⏳ Your payment is pending.
             <a href="{{ url_for('payment_page', iid=internship.id) }}" class="btn-primary" style="margin-left:10px;">💳 Complete Payment</a>
         </div>
 
@@ -26,65 +26,54 @@
                 <h4>{{ loop.index }}. {{ c.title }} <span class="badge">{{ c.type }}</span></h4>
 
                 {% if c.type == 'video' %}
-    {% if c.gumlet_video_id %}
-        <!-- Gumlet secure player (no seek) -->
-        <div class="video-container" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px;">
-            <iframe
-                src="https://play.gumlet.io/embed/{{ c.gumlet_video_id }}?disable_seek=true"
-                style="position:absolute;top:0;left:0;width:100%;height:100%;border:0;"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                allowfullscreen>
-            </iframe>
-        </div>
-        <form method="POST" action="{{ url_for('mark_complete', content_id=c.id) }}" style="margin-top:10px;">
-            <button class="btn-primary">✔️ Mark as Watched</button>
-        </form>
-    {% else %}
-        <!-- YouTube fallback -->
-        <div class="video-container">
-            <iframe width="100%" height="400" src="{{ c.video_url }}" frameborder="0" allowfullscreen></iframe>
-        </div>
-        <form method="POST" action="{{ url_for('mark_complete', content_id=c.id) }}" style="margin-top:10px;">
-            <button class="btn-primary">Mark as Watched</button>
-        </form>
-    {% endif %}
-    {% if progress_map.get(c.id) and progress_map[c.id].completed %}
-        <p class="done">✅ Completed (Score: {{ progress_map[c.id].score }})</p>
-    {% endif %}
-{% elif c.type == 'quiz' %}
+                    {# ---------- VIDEO BRANCH ---------- #}
+                    {% if c.gumlet_video_id %}
                         <div class="video-container">
-                            <div id="player_{{ c.id }}"></div>
+                            <iframe
+                                src="https://play.gumlet.io/embed/{{ c.gumlet_video_id }}?disable_seek=true"
+                                style="border:0;"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                                allowfullscreen>
+                            </iframe>
                         </div>
-                        <p class="watch-status" id="status_{{ c.id }}">
-                            {% if progress_map.get(c.id) and progress_map[c.id].completed %}
-                                ✅ Completed (Score: {{ progress_map[c.id].score }})
-                            {% else %}
-                                ▶️ Watch the full video to unlock the button below
-                            {% endif %}
-                        </p>
-                        <button class="btn-primary mark-btn" id="markBtn_{{ c.id }}"
-                                onclick="markVideoWatched({{ c.id }})"
-                                {% if progress_map.get(c.id) and progress_map[c.id].completed %}disabled{% endif %}>
-                            {% if progress_map.get(c.id) and progress_map[c.id].completed %}
-                                ✅ Already Marked
-                            {% else %}
-                                ✔️ Mark as Watched
-                            {% endif %}
-                        </button>
-                    </div>
+                        <form method="POST" action="{{ url_for('mark_complete', content_id=c.id) }}" style="margin-top:10px;">
+                            <button class="btn-primary">✔️ Mark as Watched</button>
+                        </form>
+                    {% else %}
+                        <div class="video-container">
+                            <iframe width="100%" height="400" src="{{ c.video_url }}" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                        <form method="POST" action="{{ url_for('mark_complete', content_id=c.id) }}" style="margin-top:10px;">
+                            <button class="btn-primary">✔️ Mark as Watched</button>
+                        </form>
+                    {% endif %}
+                    {% if progress_map.get(c.id) and progress_map[c.id].completed %}
+                        <p class="done">✅ Completed</p>
+                    {% endif %}
+
                 {% elif c.type == 'quiz' %}
+                    {# ---------- QUIZ BRANCH ---------- #}
                     <div class="quiz" data-quiz='{{ c.quiz_data | safe }}' data-content-id="{{ c.id }}"></div>
                     {% if progress_map.get(c.id) and progress_map[c.id].completed %}
                         <p class="done">✅ Completed (Score: {{ progress_map[c.id].score }})</p>
                     {% endif %}
+
+                {% else %}
+                    <p style="color:#888;">Unknown content type: {{ c.type }}</p>
                 {% endif %}
             </div>
         {% else %}
             <p>No content added yet.</p>
         {% endfor %}
+
+        {% if cert %}
+            <div style="margin-top:30px;padding:20px;background:#f0fdf4;border-radius:10px;border-left:4px solid #16a34a;">
+                🎓 <strong>Certificate issued!</strong>
+                <a href="{{ url_for('view_certificate', code=cert.code) }}" class="btn-primary" style="margin-left:10px;">View Certificate</a>
+            </div>
+        {% endif %}
     {% endif %}
 </div>
 
-<script src="https://www.youtube.com/iframe_api"></script>
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 {% endblock %}
