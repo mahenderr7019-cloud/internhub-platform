@@ -74,9 +74,9 @@ class InternshipContent(db.Model):
     type = db.Column(db.String(20))
     title = db.Column(db.String(200), nullable=False)
     video_url = db.Column(db.String(500))
+    gumlet_video_id = db.Column(db.String(100))
     quiz_data = db.Column(db.Text)
     order = db.Column(db.Integer, default=0)
-
 
 class Enrollment(db.Model):
     __tablename__ = 'enrollments'

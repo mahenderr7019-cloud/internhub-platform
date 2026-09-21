@@ -5,3 +5,4 @@ Flask-Bcrypt==1.0.1
 python-dotenv==1.0.0
 gunicorn==21.2.0
 razorpay==1.4.2
+Flask-Migrate==4.1.0

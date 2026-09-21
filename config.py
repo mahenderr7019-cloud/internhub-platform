@@ -15,6 +15,8 @@ class Config:
     RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID', '')
     RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET', '')
 
-    # Fix Render's postgres:// vs postgresql://
+    # Gumlet
+    GUMLET_API_KEY = os.getenv('GUMLET_API_KEY', '')
+
     if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
         SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace("postgres://", "postgresql://", 1)

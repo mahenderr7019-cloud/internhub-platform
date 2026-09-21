@@ -56,10 +56,13 @@
     <input type="number" name="order" value="0">
 
     <div id="videoFields">
-        <label>YouTube URL (any format — watch, share, or embed)</label>
-        <input name="video_url" placeholder="https://youtu.be/... or https://www.youtube.com/watch?v=...">
-        <small style="color:#888;">We automatically convert it to embed format.</small>
-    </div>
+    <label>Video Source URL</label>
+    <input name="video_url" placeholder="Paste a direct video URL (MP4) or YouTube link">
+    <small style="color:#888;">
+        • YouTube URL → uses YouTube player<br>
+        • Direct MP4 URL → uploaded to Gumlet (secure, non-skippable)
+    </small>
+     </div>
 
     <div id="quizFields" style="display:none">
         <label>Quiz Questions</label>

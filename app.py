@@ -4,6 +4,7 @@ import os
 import random
 import secrets
 import string
+import requests
 from functools import wraps
 from datetime import datetime
 from flask import (Flask, render_template, request, redirect, url_for, flash,
@@ -15,10 +16,12 @@ from config import Config
 from models import (db, User, School, ApprovedStudent, Internship,
                     InternshipContent, Enrollment, Progress, SchoolClass,
                     Setting, Certificate)
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.config.from_object(Config)
 db.init_app(app)
+migrate = Migrate(app, db)
 
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
@@ -110,6 +113,35 @@ def youtube_embed_url(url):
     return url
 
 
+def gumlet_create_asset(title, source_url):
+    """Create a Gumlet video asset from a source URL. Returns asset_id or None."""
+    if not app.config.get('GUMLET_API_KEY'):
+        print('⚠️ Gumlet API key not configured')
+        return None
+    url = 'https://api.gumlet.com/v1/video/assets'
+    headers = {
+        'Authorization': f'Bearer {app.config["GUMLET_API_KEY"]}',
+        'Content-Type': 'application/json'
+    }
+    payload = {
+        'title': title,
+        'source': source_url,
+        'format': 'mp4',
+        'resolution': ['720p', '1080p']
+    }
+    try:
+        r = requests.post(url, json=payload, headers=headers, timeout=30)
+        if r.status_code in (200, 201):
+            data = r.json()
+            return data.get('asset_id') or data.get('id')
+        else:
+            print('Gumlet create error:', r.status_code, r.text)
+            return None
+    except Exception as e:
+        print('Gumlet exception:', e)
+        return None
+
+
 def generate_school_code():
     while True:
         code = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
@@ -143,7 +175,6 @@ def check_and_issue_certificate(enrollment):
     if existing:
         return existing
 
-    # Average score across quizzes only
     quiz_scores = []
     quiz_count = 0
     for c in contents:
@@ -521,7 +552,6 @@ def mark_complete(content_id):
     p.score = score
     db.session.commit()
 
-    # Check if all content complete → issue certificate
     cert = check_and_issue_certificate(enrollment)
     cert_code = cert.code if cert else None
 
@@ -765,10 +795,25 @@ def admin_content_add(iid):
     ctype = request.form['type']
     title = request.form['title']
     order = int(request.form.get('order') or 0)
+
     if ctype == 'video':
-        video_url = youtube_embed_url(request.form.get('video_url', ''))
-        c = InternshipContent(internship_id=iid, type='video', title=title,
-                              video_url=video_url, order=order)
+        source_url = request.form.get('video_url', '').strip()
+        if not source_url:
+            flash('Please provide a video source URL.', 'danger')
+            return redirect(url_for('admin_internship_content', iid=iid))
+
+        if 'youtube.com' in source_url or 'youtu.be' in source_url:
+            c = InternshipContent(internship_id=iid, type='video', title=title,
+                                  video_url=youtube_embed_url(source_url), order=order)
+        else:
+            asset_id = gumlet_create_asset(title, source_url)
+            if not asset_id:
+                flash('❌ Gumlet upload failed. Check the URL and try again.', 'danger')
+                return redirect(url_for('admin_internship_content', iid=iid))
+            c = InternshipContent(internship_id=iid, type='video', title=title,
+                                  video_url=source_url,
+                                  gumlet_video_id=asset_id,
+                                  order=order)
     else:
         quiz_data = request.form.get('quiz_data', '[]')
         c = InternshipContent(internship_id=iid, type='quiz', title=title,
@@ -788,7 +833,15 @@ def admin_content_edit(cid):
         c.title = request.form['title']
         c.order = int(request.form.get('order') or 0)
         if c.type == 'video':
-            c.video_url = youtube_embed_url(request.form.get('video_url', ''))
+            source_url = request.form.get('video_url', '').strip()
+            if 'youtube.com' in source_url or 'youtu.be' in source_url:
+                c.video_url = youtube_embed_url(source_url)
+                c.gumlet_video_id = None
+            else:
+                asset_id = gumlet_create_asset(c.title, source_url)
+                if asset_id:
+                    c.video_url = source_url
+                    c.gumlet_video_id = asset_id
         else:
             c.quiz_data = request.form.get('quiz_data', '[]')
         db.session.commit()
