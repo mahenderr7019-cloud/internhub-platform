@@ -1063,6 +1063,11 @@ def init_db():
         seed_settings()
 
 
-if __name__ == '__main__':
+# Always run init_db at import time (works for both `python app.py` AND `gunicorn app:app`)
+try:
     init_db()
+except Exception as e:
+    print(f"⚠️ init_db warning (may be safe to ignore): {e}")
+
+if __name__ == '__main__':
     app.run(debug=True)
