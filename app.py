@@ -578,10 +578,13 @@ def mark_complete(content_id):
                     'details': details, 'certificate_issued': bool(cert),
                     'certificate_code': cert_code})
 
-
+@app.route('/my-internships')
+@login_required
 def my_internships():
     enrollments = Enrollment.query.filter_by(user_id=current_user.id).all()
     return render_template('my_internships.html', enrollments=enrollments)
+
+
 
 
 @app.route('/profile', methods=['GET', 'POST'])
