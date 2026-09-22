@@ -38,20 +38,24 @@
                             <iframe width="100%" height="400" src="{{ c.video_url }}" frameborder="0" allowfullscreen></iframe>
                         </div>
                     {% endif %}
-                    <form method="POST" action="{{ url_for('mark_complete', content_id=c.id) }}" style="margin-top:10px;">
-                        <button class="btn-primary">✔️ Mark as Watched</button>
-                    </form>
-                    {% if progress_map.get(c.id) and progress_map[c.id].completed %}
-                        <p class="done">✅ Completed</p>
-                    {% endif %}
+
+                    <button class="btn-primary mark-btn"
+                            id="markBtn_{{ c.id }}"
+                            onclick="markComplete({{ c.id }})"
+                            style="margin-top:10px;"
+                            {% if progress_map.get(c.id) and progress_map[c.id].completed %}disabled{% endif %}>
+                        {% if progress_map.get(c.id) and progress_map[c.id].completed %}
+                            ✅ Completed
+                        {% else %}
+                            ✔️ Mark as Watched
+                        {% endif %}
+                    </button>
+                    <span id="markStatus_{{ c.id }}" style="margin-left:10px;color:#16a34a;font-weight:600;"></span>
 
                 {% elif c.type == 'quiz' %}
                     <div class="quiz-container" data-content-id="{{ c.id }}">
                         <p style="color:#888;">Loading quiz...</p>
                     </div>
-                    {% if progress_map.get(c.id) and progress_map[c.id].completed %}
-                        <p class="done">✅ Completed (Score: {{ progress_map[c.id].score }})</p>
-                    {% endif %}
 
                 {% else %}
                     <p style="color:#888;">Unknown content type: {{ c.type }}</p>
@@ -71,4 +75,38 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+<script>
+function markComplete(contentId) {
+    const btn = document.getElementById('markBtn_' + contentId);
+    const status = document.getElementById('markStatus_' + contentId);
+
+    btn.disabled = true;
+    btn.innerText = 'Submitting...';
+
+    fetch('/mark_complete/' + contentId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            btn.innerText = '✅ Completed';
+            status.innerText = 'Marked as watched!';
+            setTimeout(() => { location.reload(); }, 800);
+        } else {
+            btn.disabled = false;
+            btn.innerText = '✔️ Mark as Watched';
+            status.innerText = 'Error: ' + (data.message || 'Try again');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        btn.disabled = false;
+        btn.innerText = '✔️ Mark as Watched';
+        status.innerText = 'Network error';
+    });
+}
+</script>
 {% endblock %}
