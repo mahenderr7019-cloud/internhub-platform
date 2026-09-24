@@ -794,9 +794,28 @@ def admin_internship_edit(iid):
 @admin_required
 def admin_internship_delete(iid):
     i = Internship.query.get_or_404(iid)
+
+    # Delete in the correct order to avoid foreign key errors
+
+    # 1. Delete certificates tied to this internship
+    Certificate.query.filter_by(internship_id=iid).delete()
+
+    # 2. Delete progress records via enrollments
+    enrollments = Enrollment.query.filter_by(internship_id=iid).all()
+    for e in enrollments:
+        Progress.query.filter_by(enrollment_id=e.id).delete()
+
+    # 3. Delete enrollments
+    Enrollment.query.filter_by(internship_id=iid).delete()
+
+    # 4. Delete internship contents (videos/quizzes)
+    InternshipContent.query.filter_by(internship_id=iid).delete()
+
+    # 5. Finally delete the internship
     db.session.delete(i)
     db.session.commit()
-    flash('Internship deleted.', 'success')
+
+    flash('Internship and all related data deleted.', 'success')
     return redirect(url_for('admin_internships'))
 
 
