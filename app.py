@@ -794,7 +794,8 @@ def admin_internship_edit(iid):
 @app.route('/admin/internships/<int:iid>/delete', methods=['POST'])
 @login_required
 @admin_required
-@app.route('/admin/internships/<int:iid>/delete', methods=['POST'])
+def admin_internship_delete(iid):
+    i = Internship.query.get_or_404(iid)
 @login_required
 @admin_required
 def admin_internship_delete(iid):
