@@ -11,7 +11,7 @@
                     <div class="cert-list-left">
                         <div class="cert-list-icon">🏅</div>
                         <div>
-                            <h3>{{ cert.internship.title }}</h3>
+                            <h3>{{ cert.internship_title or (cert.internship.title if cert.internship else 'Internship') }}</h3>
                             <p class="cert-list-meta">
                                 ID: <strong>{{ cert.code }}</strong> •
                                 Score: <strong>{{ cert.avg_score }}%</strong> •

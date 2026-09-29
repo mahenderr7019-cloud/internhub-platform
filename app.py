@@ -190,6 +190,8 @@ def check_and_issue_certificate(enrollment):
         user_id=enrollment.user_id,
         internship_id=enrollment.internship_id,
         enrollment_id=enrollment.id,
+        internship_title=internship.title,
+        internship_duration=internship.duration,
         avg_score=round(avg, 1),
         total_quizzes=quiz_count
     )
@@ -792,18 +794,28 @@ def admin_internship_edit(iid):
 @app.route('/admin/internships/<int:iid>/delete', methods=['POST'])
 @login_required
 @admin_required
+@app.route('/admin/internships/<int:iid>/delete', methods=['POST'])
+@login_required
+@admin_required
 def admin_internship_delete(iid):
     i = Internship.query.get_or_404(iid)
 
-    # Delete in the correct order to avoid foreign key errors
+    # ⚠️ IMPORTANT: Do NOT delete certificates — they are permanent student records.
+    # Certificates have snapshots of internship_title and internship_duration,
+    # so we just unlink them from this internship.
 
-    # 1. Delete certificates tied to this internship
-    Certificate.query.filter_by(internship_id=iid).delete()
+    # 1. Unlink certificates from this internship (keep them intact)
+    certs = Certificate.query.filter_by(internship_id=iid).all()
+    for cert in certs:
+        cert.internship_id = None
 
-    # 2. Delete progress records via enrollments
+    # 2. Clean up progress + unlink certificates from enrollments
     enrollments = Enrollment.query.filter_by(internship_id=iid).all()
     for e in enrollments:
         Progress.query.filter_by(enrollment_id=e.id).delete()
+        cert = Certificate.query.filter_by(enrollment_id=e.id).first()
+        if cert:
+            cert.enrollment_id = None
 
     # 3. Delete enrollments
     Enrollment.query.filter_by(internship_id=iid).delete()
@@ -815,7 +827,7 @@ def admin_internship_delete(iid):
     db.session.delete(i)
     db.session.commit()
 
-    flash('Internship and all related data deleted.', 'success')
+    flash('Internship deleted. Student certificates were preserved.', 'success')
     return redirect(url_for('admin_internships'))
 
 

@@ -64,7 +64,7 @@ class Internship(db.Model):
                                cascade='all, delete-orphan',
                                order_by='InternshipContent.order')
     enrollments = db.relationship('Enrollment', backref='internship', cascade='all, delete-orphan')
-    certificates = db.relationship('Certificate', backref='internship', cascade='all, delete-orphan')
+    certificates = db.relationship('Certificate', backref='internship')
 
 
 class InternshipContent(db.Model):
@@ -130,13 +130,14 @@ class Certificate(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(30), unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    internship_id = db.Column(db.Integer, db.ForeignKey('internships.id'), nullable=False)
-    enrollment_id = db.Column(db.Integer, db.ForeignKey('enrollments.id'), nullable=False)
+    internship_id = db.Column(db.Integer, db.ForeignKey('internships.id'), nullable=True)
+    enrollment_id = db.Column(db.Integer, db.ForeignKey('enrollments.id'), nullable=True)
+    internship_title = db.Column(db.String(200))
+    internship_duration = db.Column(db.String(50))
     issued_at = db.Column(db.DateTime, default=datetime.utcnow)
     avg_score = db.Column(db.Float, default=0)
     total_quizzes = db.Column(db.Integer, default=0)
     is_revoked = db.Column(db.Boolean, default=False)
     revoked_reason = db.Column(db.String(300))
 
-    enrollment = db.relationship('Enrollment',
-                                 backref=db.backref('certificate', uselist=False))
+    enrollment = db.relationship('Enrollment', backref=db.backref('certificate', uselist=False))

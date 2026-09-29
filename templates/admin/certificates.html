@@ -17,7 +17,7 @@
     <tr>
         <td><code style="background:#eef2ff;padding:3px 8px;border-radius:4px;font-size:0.85rem;">{{ c.code }}</code></td>
         <td>{{ c.user.name }}</td>
-        <td>{{ c.internship.title }}</td>
+        <td>{{ c.internship_title or (c.internship.title if c.internship else '—') }}</td>
         <td>{{ c.avg_score }}%</td>
         <td>{{ c.issued_at.strftime('%d %b %Y') }}</td>
         <td>

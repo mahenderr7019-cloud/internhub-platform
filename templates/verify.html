@@ -39,11 +39,11 @@
                         </div>
                         <div class="verify-row">
                             <span class="verify-label">Internship</span>
-                            <span class="verify-value">{{ cert.internship.title }}</span>
+                            <span class="verify-value">{{ cert.internship_title or (cert.internship.title if cert.internship else 'Internship (removed)') }}</span>
                         </div>
                         <div class="verify-row">
                             <span class="verify-label">Duration</span>
-                            <span class="verify-value">{{ cert.internship.duration or '—' }}</span>
+                            <span class="verify-value">{{ cert.internship_duration or (cert.internship.duration if cert.internship else '—') }}</span>
                         </div>
                         <div class="verify-row">
                             <span class="verify-label">Average Score</span>

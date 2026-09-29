@@ -25,10 +25,10 @@
 
             <p class="cert-text">has successfully completed the internship program</p>
 
-            <h3 class="cert-internship">{{ cert.internship.title }}</h3>
+            <h3 class="cert-internship">{{ cert.internship_title or (cert.internship.title if cert.internship else 'Internship') }}</h3>
 
             <p class="cert-details">
-                Duration: <strong>{{ cert.internship.duration or '—' }}</strong>
+                Duration: <strong>{{ cert.internship_duration or (cert.internship.duration if cert.internship else '—') }}</strong>
                 &nbsp;•&nbsp;
                 Average Score: <strong>{{ cert.avg_score }}%</strong>
                 {% if cert.total_quizzes %}
