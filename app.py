@@ -796,14 +796,6 @@ def admin_internship_edit(iid):
 @admin_required
 def admin_internship_delete(iid):
     i = Internship.query.get_or_404(iid)
-@login_required
-@admin_required
-def admin_internship_delete(iid):
-    i = Internship.query.get_or_404(iid)
-
-    # ⚠️ IMPORTANT: Do NOT delete certificates — they are permanent student records.
-    # Certificates have snapshots of internship_title and internship_duration,
-    # so we just unlink them from this internship.
 
     # 1. Unlink certificates from this internship (keep them intact)
     certs = Certificate.query.filter_by(internship_id=iid).all()
@@ -830,6 +822,8 @@ def admin_internship_delete(iid):
 
     flash('Internship deleted. Student certificates were preserved.', 'success')
     return redirect(url_for('admin_internships'))
+
+
 
 
 @app.route('/admin/internships/<int:iid>/content')
