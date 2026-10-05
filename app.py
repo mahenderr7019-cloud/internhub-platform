@@ -845,13 +845,23 @@ def admin_content_add(iid):
     if ctype == 'video':
         source_url = request.form.get('video_url', '').strip()
         if not source_url:
-            flash('Please provide a video source URL.', 'danger')
+            flash('Please provide a video source.', 'danger')
             return redirect(url_for('admin_internship_content', iid=iid))
 
-        if 'youtube.com' in source_url or 'youtu.be' in source_url:
+        # Detect Gumlet Asset ID (24-char hex)
+        import re as _re
+        if _re.fullmatch(r'[a-f0-9]{24}', source_url.lower()):
+            # It's a Gumlet Asset ID
+            c = InternshipContent(internship_id=iid, type='video', title=title,
+                                  video_url='gumlet',
+                                  gumlet_video_id=source_url,
+                                  order=order)
+        elif 'youtube.com' in source_url or 'youtu.be' in source_url:
+            # YouTube URL
             c = InternshipContent(internship_id=iid, type='video', title=title,
                                   video_url=youtube_embed_url(source_url), order=order)
         else:
+            # Direct video URL → send to Gumlet
             asset_id = gumlet_create_asset(title, source_url)
             if not asset_id:
                 flash('❌ Gumlet upload failed. Check the URL and try again.', 'danger')
@@ -864,6 +874,7 @@ def admin_content_add(iid):
         quiz_data = request.form.get('quiz_data', '[]')
         c = InternshipContent(internship_id=iid, type='quiz', title=title,
                               quiz_data=quiz_data, order=order)
+
     db.session.add(c)
     db.session.commit()
     flash('Content added.', 'success')
