@@ -848,20 +848,26 @@ def admin_content_add(iid):
             flash('Please provide a video source.', 'danger')
             return redirect(url_for('admin_internship_content', iid=iid))
 
-        # Detect Gumlet Asset ID (24-char hex)
-        import re as _re
-        if _re.fullmatch(r'[a-f0-9]{24}', source_url.lower()):
-            # It's a Gumlet Asset ID
+        # ---------- Detect input type ----------
+        # 1) Full Gumlet embed URL → extract 24-char ID
+        m = re.search(r'play\.gumlet\.io/embed/([a-f0-9]{24})', source_url, re.I)
+        if m:
             c = InternshipContent(internship_id=iid, type='video', title=title,
                                   video_url='gumlet',
-                                  gumlet_video_id=source_url,
+                                  gumlet_video_id=m.group(1),
                                   order=order)
+        # 2) Bare 24-char hex ID
+        elif re.fullmatch(r'[a-fA-F0-9]{24}', source_url):
+            c = InternshipContent(internship_id=iid, type='video', title=title,
+                                  video_url='gumlet',
+                                  gumlet_video_id=source_url.lower(),
+                                  order=order)
+        # 3) YouTube URL
         elif 'youtube.com' in source_url or 'youtu.be' in source_url:
-            # YouTube URL
             c = InternshipContent(internship_id=iid, type='video', title=title,
                                   video_url=youtube_embed_url(source_url), order=order)
+        # 4) Direct MP4 URL → send to Gumlet
         else:
-            # Direct video URL → send to Gumlet
             asset_id = gumlet_create_asset(title, source_url)
             if not asset_id:
                 flash('❌ Gumlet upload failed. Check the URL and try again.', 'danger')
