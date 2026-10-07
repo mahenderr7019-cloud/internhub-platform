@@ -17,6 +17,7 @@ from models import (db, User, School, ApprovedStudent, Internship,
                     InternshipContent, Enrollment, Progress, SchoolClass,
                     Setting, Certificate)
 from flask_migrate import Migrate
+from flask_mail import Mail, Message
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -26,6 +27,7 @@ migrate = Migrate(app, db)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+mail = Mail(app)
 
 # Razorpay client
 try:
@@ -149,6 +151,35 @@ def generate_school_code():
             return code
 
 
+def send_otp_email(to_email, otp, purpose="verify your account"):
+    """Send OTP email via Gmail SMTP. Returns True if sent, False otherwise."""
+    if not app.config.get('MAIL_USERNAME') or not app.config.get('MAIL_PASSWORD'):
+        print('⚠️ Email not configured — skipping send')
+        return False
+    try:
+        from flask_mail import Message as MailMessage
+        subject = "Your InternHub verification code"
+        body = (
+            f"Hello,\n\n"
+            f"Your OTP to {purpose} is: {otp}\n\n"
+            f"This code expires in 10 minutes. Do not share it with anyone.\n\n"
+            f"If you did not request this, please ignore this email.\n\n"
+            f"— Byte and Build"
+        )
+        msg = MailMessage(
+            subject=subject,
+            recipients=[to_email],
+            body=body,
+            sender=(app.config.get('MAIL_SENDER_NAME', 'InternHub'), app.config['MAIL_USERNAME'])
+        )
+        mail.send(msg)
+        print(f'✅ OTP email sent to {to_email}')
+        return True
+    except Exception as e:
+        print(f'❌ Email send failed: {e}')
+        return Falses
+
+
 def generate_certificate_code():
     year = datetime.utcnow().year
     while True:
@@ -244,7 +275,11 @@ def forgot_password():
             otp = str(random.randint(100000, 999999))
             session['reset_email'] = email
             session['reset_otp'] = otp
-            flash(f'📱 Demo OTP (in real app sent via email/SMS): {otp}', 'info')
+            sent = send_otp_email(email, otp, purpose="reset your password")
+            if sent:
+                flash(f'📧 OTP sent to {email}. Check your inbox (and spam folder).', 'success')
+            else:
+                flash(f'📱 Demo OTP (email not configured): {otp}', 'info')
             return redirect(url_for('verify_otp'))
         flash('❌ No account found with that email.', 'danger')
         return redirect(url_for('forgot_password'))
@@ -622,7 +657,11 @@ def send_otp():
     otp = str(random.randint(100000, 999999))
     session['profile_otp'] = otp
     session['profile_otp_target'] = request.form.get('target', '')
-    flash(f'📱 Demo OTP (in real app sent via SMS): {otp}', 'info')
+    sent = send_otp_email(current_user.email, otp, purpose="change your contact details")
+    if sent:
+        flash(f'📧 OTP sent to {current_user.email}. Check your inbox.', 'success')
+    else:
+        flash(f'📱 Demo OTP (email not configured): {otp}', 'info')
     return redirect(url_for('profile'))
 
 
