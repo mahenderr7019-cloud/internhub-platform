@@ -36,17 +36,21 @@ class Config:
             _db_url = _db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
     SQLALCHEMY_DATABASE_URI = _db_url
 
-    # ⭐ Fix for Neon SSL drop / connection recycling
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        "pool_pre_ping": True,        # Test connection before using it
-        "pool_recycle": 300,          # Recycle connections after 5 minutes
-        "pool_size": 5,               # Keep 5 connections ready
-        "max_overflow": 2,            # Allow 2 extra during spikes
-        "connect_args": {
-            "connect_timeout": 10,    # Give Neon time to wake up
-            "keepalives": 1,
-            "keepalives_idle": 30,
-            "keepalives_interval": 10,
-            "keepalives_count": 5,
-        },
-    }
+    # Engine options — only for PostgreSQL (Neon on Render)
+    if _db_url and _db_url.startswith("postgresql"):
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            "pool_pre_ping": True,
+            "pool_recycle": 300,
+            "pool_size": 5,
+            "max_overflow": 2,
+            "connect_args": {
+                "connect_timeout": 10,
+                "keepalives": 1,
+                "keepalives_idle": 30,
+                "keepalives_interval": 10,
+                "keepalives_count": 5,
+            },
+        }
+    else:
+        # SQLite local — no special options
+        SQLALCHEMY_ENGINE_OPTIONS = {}
