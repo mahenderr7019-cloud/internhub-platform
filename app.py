@@ -152,32 +152,40 @@ def generate_school_code():
 
 
 def send_otp_email(to_email, otp, purpose="verify your account"):
-    """Send OTP email via Gmail SMTP. Returns True if sent, False otherwise."""
+    """Send OTP email via Gmail SMTP in a background thread."""
     if not app.config.get('MAIL_USERNAME') or not app.config.get('MAIL_PASSWORD'):
         print('⚠️ Email not configured — skipping send')
         return False
-    try:
-        from flask_mail import Message as MailMessage
-        subject = "Your InternHub verification code"
-        body = (
-            f"Hello,\n\n"
-            f"Your OTP to {purpose} is: {otp}\n\n"
-            f"This code expires in 10 minutes. Do not share it with anyone.\n\n"
-            f"If you did not request this, please ignore this email.\n\n"
-            f"— Byte and Build"
-        )
-        msg = MailMessage(
-            subject=subject,
-            recipients=[to_email],
-            body=body,
-            sender=(app.config.get('MAIL_SENDER_NAME', 'InternHub'), app.config['MAIL_USERNAME'])
-        )
-        mail.send(msg)
-        print(f'✅ OTP email sent to {to_email}')
-        return True
-    except Exception as e:
-        print(f'❌ Email send failed: {e}')
-        return Falses
+
+    def _send():
+        try:
+            from flask_mail import Message as MailMessage
+            with app.app_context():
+                subject = "Your InternHub verification code"
+                body = (
+                    f"Hello,\n\n"
+                    f"Your OTP to {purpose} is: {otp}\n\n"
+                    f"This code expires in 10 minutes. Do not share it with anyone.\n\n"
+                    f"If you did not request this, please ignore this email.\n\n"
+                    f"— Byte and Build"
+                )
+                msg = MailMessage(
+                    subject=subject,
+                    recipients=[to_email],
+                    body=body,
+                    sender=(app.config.get('MAIL_SENDER_NAME', 'InternHub'),
+                            app.config['MAIL_USERNAME'])
+                )
+                mail.send(msg)
+                print(f'✅ OTP email sent to {to_email}')
+        except Exception as e:
+            print(f'❌ Email send failed: {e}')
+
+    import threading
+    t = threading.Thread(target=_send)
+    t.daemon = True
+    t.start()
+    return True  # Return True immediately
 
 
 def generate_certificate_code():
