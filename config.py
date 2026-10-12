@@ -25,7 +25,7 @@ class Config:
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD', '')
     MAIL_SENDER_NAME = os.getenv('MAIL_SENDER_NAME', 'InternHub')
 
-    # Force psycopg2 driver (psycopg3 has IPv6 issues on Render free tier)
+    # Database URL
     _db_url = os.getenv('DATABASE_URL', 'sqlite:///database.db')
     if _db_url:
         if _db_url.startswith("postgres://"):
@@ -35,3 +35,18 @@ class Config:
         elif _db_url.startswith("postgresql://"):
             _db_url = _db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
     SQLALCHEMY_DATABASE_URI = _db_url
+
+    # ⭐ Fix for Neon SSL drop / connection recycling
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,        # Test connection before using it
+        "pool_recycle": 300,          # Recycle connections after 5 minutes
+        "pool_size": 5,               # Keep 5 connections ready
+        "max_overflow": 2,            # Allow 2 extra during spikes
+        "connect_args": {
+            "connect_timeout": 10,    # Give Neon time to wake up
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 10,
+            "keepalives_count": 5,
+        },
+    }
