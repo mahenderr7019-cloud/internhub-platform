@@ -274,9 +274,58 @@ def get_settings():
 # ---------- Public ----------
 @app.route('/')
 def index():
-    internships = Internship.query.order_by(Internship.created_at.desc()).limit(6).all()
+    # Get filter params
+    q = request.args.get('q', '').strip()
+    category = request.args.get('category', '').strip()
+    price = request.args.get('price', '').strip()
+    sort = request.args.get('sort', 'newest').strip()
+
+    query = Internship.query
+
+    # Search filter
+    if q:
+        like = f'%{q}%'
+        query = query.filter(
+            db.or_(
+                Internship.title.ilike(like),
+                Internship.description.ilike(like),
+                Internship.category.ilike(like)
+            )
+        )
+
+    # Category filter
+    if category:
+        query = query.filter(Internship.category == category)
+
+    # Price filter
+    if price == 'free':
+        query = query.filter(Internship.is_paid == False)
+    elif price == 'paid':
+        query = query.filter(Internship.is_paid == True)
+
+    # Sort
+    if sort == 'oldest':
+        query = query.order_by(Internship.created_at.asc())
+    elif sort == 'price_low':
+        query = query.order_by(Internship.price.asc())
+    elif sort == 'price_high':
+        query = query.order_by(Internship.price.desc())
+    elif sort == 'title':
+        query = query.order_by(Internship.title.asc())
+    else:
+        query = query.order_by(Internship.created_at.desc())
+
+    internships = query.all()
+
+    # Get distinct categories for filter dropdown
+    categories = [c[0] for c in db.session.query(Internship.category).distinct().all() if c[0]]
+
     settings = get_settings()
-    return render_template('index.html', internships=internships, settings=settings)
+    return render_template('index.html',
+                           internships=internships,
+                           settings=settings,
+                           categories=categories,
+                           q=q, category=category, price=price, sort=sort)
 
 
 @app.route('/forgot-password', methods=['GET', 'POST'])

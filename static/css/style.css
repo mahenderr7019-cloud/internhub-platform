@@ -389,3 +389,114 @@ html { scroll-behavior: smooth; }
     .cert-bottom-left, .cert-bottom-right { text-align: center; }
     .cert-sign-line { margin: 0 auto 5px; }
 }
+/* ===== SEARCH & FILTER BAR ===== */
+.search-filter-bar {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    margin: 20px 0 30px;
+}
+
+.search-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 14px 18px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.search-row .btn-primary {
+    padding: 14px 30px;
+    border-radius: 10px;
+    font-size: 1rem;
+}
+
+.filter-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.filter-select {
+    padding: 10px 15px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.filter-row .btn-secondary {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    text-decoration: none;
+    background: #f3f4f6;
+    color: #374151;
+    font-weight: 600;
+}
+
+.filter-row .btn-secondary:hover {
+    background: #e5e7eb;
+}
+
+.result-count {
+    margin-top: 15px;
+    color: #6b7280;
+    font-size: 0.92rem;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    background: #f9fafb;
+    border-radius: 12px;
+    border: 2px dashed #e5e7eb;
+}
+
+.empty-state h3 {
+    margin: 0 0 10px;
+    color: #374151;
+}
+
+.empty-state p {
+    color: #6b7280;
+    margin: 0;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .search-row {
+        flex-direction: column;
+    }
+    .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .filter-select {
+        width: 100%;
+    }
+}
