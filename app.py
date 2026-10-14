@@ -152,40 +152,45 @@ def generate_school_code():
 
 
 def send_otp_email(to_email, otp, purpose="verify your account"):
-    """Send OTP email via Gmail SMTP in a background thread."""
-    if not app.config.get('MAIL_USERNAME') or not app.config.get('MAIL_PASSWORD'):
-        print('⚠️ Email not configured — skipping send')
+    """Send OTP email via Brevo API (works on Render free tier)."""
+    api_key = os.getenv('BREVO_API_KEY')
+    if not api_key:
+        print('⚠️ Brevo API key not configured — skipping send')
         return False
 
-    def _send():
-        try:
-            from flask_mail import Message as MailMessage
-            with app.app_context():
-                subject = "Your InternHub verification code"
-                body = (
-                    f"Hello,\n\n"
-                    f"Your OTP to {purpose} is: {otp}\n\n"
-                    f"This code expires in 10 minutes. Do not share it with anyone.\n\n"
-                    f"If you did not request this, please ignore this email.\n\n"
-                    f"— Byte and Build"
-                )
-                msg = MailMessage(
-                    subject=subject,
-                    recipients=[to_email],
-                    body=body,
-                    sender=(app.config.get('MAIL_SENDER_NAME', 'InternHub'),
-                            app.config['MAIL_USERNAME'])
-                )
-                mail.send(msg)
-                print(f'✅ OTP email sent to {to_email}')
-        except Exception as e:
-            print(f'❌ Email send failed: {e}')
+    url = "https://api.brevo.com/v3/smtp/email"
+    headers = {
+        "accept": "application/json",
+        "api-key": api_key,
+        "content-type": "application/json"
+    }
+    payload = {
+        "sender": {
+            "name": "Byte and Build",
+            "email": "mahenderr7019@gmail.com"
+        },
+        "to": [{"email": to_email}],
+        "subject": "Your InternHub verification code",
+        "htmlContent": (
+            f"<p>Hello,</p>"
+            f"<p>Your OTP to {purpose} is: <b style='font-size:20px;'>{otp}</b></p>"
+            f"<p>This code expires in 10 minutes. Do not share it with anyone.</p>"
+            f"<p>If you did not request this, please ignore this email.</p>"
+            f"<p>— Byte and Build</p>"
+        )
+    }
 
-    import threading
-    t = threading.Thread(target=_send)
-    t.daemon = True
-    t.start()
-    return True  # Return True immediately
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=15)
+        if response.status_code in (200, 201, 202):
+            print(f'✅ OTP email sent to {to_email} via Brevo')
+            return True
+        else:
+            print(f'❌ Brevo error: {response.status_code} {response.text}')
+            return False
+    except Exception as e:
+        print(f'❌ Email send failed: {e}')
+        return False
 
 
 def generate_certificate_code():
@@ -296,16 +301,19 @@ def forgot_password():
 
 @app.route('/verify-otp', methods=['GET', 'POST'])
 def verify_otp():
-    if 'reset_email' not in session:
+    if 'reset_email' not in session or 'reset_otp' not in session:
         flash('Please start from the forgot password page.', 'warning')
         return redirect(url_for('forgot_password'))
     if request.method == 'POST':
         entered = request.form.get('otp', '').strip()
-        if entered == session.get('reset_otp'):
+        saved = str(session.get('reset_otp', '')).strip()
+        print(f'DEBUG: entered="{entered}" saved="{saved}" match={entered == saved}')
+        if entered == saved:
             session['reset_verified'] = True
             flash('✅ OTP verified! Now set a new password.', 'success')
             return redirect(url_for('reset_password'))
-        flash('❌ Invalid OTP. Try again.', 'danger')
+        else:
+            flash('❌ Invalid OTP. Please check the code and try again.', 'danger')
     return render_template('verify_otp.html')
 
 
