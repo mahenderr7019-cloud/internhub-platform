@@ -1,4 +1,4 @@
-// ===== QUIZ RENDERING (fetch via API) =====
+// ===== QUIZ RENDERING =====
 document.querySelectorAll('.quiz-container').forEach(async container => {
     const contentId = container.dataset.contentId;
     try {
@@ -7,6 +7,17 @@ document.querySelectorAll('.quiz-container').forEach(async container => {
 
         if (data.error || !data.quiz || data.quiz.length === 0) {
             container.innerHTML = '<p style="color:#888;">No quiz data available.</p>';
+            return;
+        }
+
+        // If already completed, show only the score
+        if (data.already_completed) {
+            container.innerHTML = `
+                <div style="background:#f0fdf4;padding:15px;border-radius:8px;border-left:4px solid #16a34a;">
+                    <h3 style="color:#16a34a;margin:0 0 5px;">✅ Already Completed</h3>
+                    <p style="margin:0;color:#555;">Your score: <strong>${data.score} / ${data.total}</strong> (${Math.round(data.score/data.total*100)}%)</p>
+                    <p style="margin:8px 0 0;color:#888;font-size:0.85rem;">This quiz cannot be retaken.</p>
+                </div>`;
             return;
         }
 
@@ -23,7 +34,8 @@ document.querySelectorAll('.quiz-container').forEach(async container => {
             });
             html += `</div>`;
         });
-        html += `<button class="btn-primary" style="margin-top:15px;" onclick="submitQuiz(${contentId}, ${quiz.length})">Submit Quiz</button>`;
+        html += `<button class="btn-primary" id="quizSubmit_${contentId}" style="margin-top:15px;" onclick="submitQuiz(${contentId}, ${quiz.length})">Submit Quiz</button>`;
+        html += `<p style="color:#dc2626;font-size:0.85rem;margin-top:8px;">⚠️ You can submit this quiz only once. Make sure your answers are correct.</p>`;
         html += `<div id="quizResult_${contentId}" style="margin-top:15px;"></div>`;
         container.innerHTML = html;
     } catch (e) {
@@ -46,6 +58,13 @@ function submitQuiz(contentId, total) {
         if (!confirm('You have unanswered questions. Submit anyway?')) return;
     }
 
+    // Disable button immediately to prevent double submission
+    const btn = document.getElementById(`quizSubmit_${contentId}`);
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = 'Submitting...';
+    }
+
     fetch(`/mark_complete/${contentId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -53,6 +72,11 @@ function submitQuiz(contentId, total) {
     })
     .then(r => r.json())
     .then(data => {
+        if (data.already_done) {
+            alert('⚠️ You have already completed this quiz. It cannot be retaken.');
+            location.reload();
+            return;
+        }
         const pct = Math.round((data.score / total) * 100);
         let html = `<div style="background:#f0fdf4;padding:15px;border-radius:8px;border-left:4px solid #16a34a;">
             <h3 style="color:#16a34a;margin:0 0 5px;">Score: ${data.score} / ${total} (${pct}%)</h3>
@@ -73,16 +97,54 @@ function submitQuiz(contentId, total) {
             html += '</div>';
         }
 
-        if (data.certificate_issued) {
-            html += `<div style="margin-top:15px;padding:15px;background:#fef3c7;border-radius:8px;border-left:4px solid #f59e0b;">
-                🎓 <strong>Certificate issued!</strong> Check <a href="/my-certificates">My Certificates</a>.
-            </div>`;
-        }
-
+        // Note: certificate banner removed — server-side will show it after reload
         document.getElementById(`quizResult_${contentId}`).innerHTML = html;
+
+        // Reload after 2 seconds so server-rendered cert banner shows
+        setTimeout(() => { location.reload(); }, 2000);
     })
     .catch(err => {
         console.error('Quiz submit error:', err);
+        if (btn) {
+            btn.disabled = false;
+            btn.innerText = 'Submit Quiz';
+        }
         alert('Error submitting quiz. Please try again.');
+    });
+}
+function markComplete(contentId) {
+    const btn = document.getElementById('markBtn_' + contentId);
+    const status = document.getElementById('markStatus_' + contentId);
+
+    btn.disabled = true;
+    btn.innerText = 'Submitting...';
+
+    fetch('/mark_complete/' + contentId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.already_done) {
+            status.innerText = '⚠️ Already completed';
+            location.reload();
+            return;
+        }
+        if (data.success) {
+            btn.innerText = '✅ Watched';
+            status.innerText = 'Marked!';
+            setTimeout(() => { location.reload(); }, 800);
+        } else {
+            btn.disabled = false;
+            btn.innerText = '✔️ Mark as Watched';
+            status.innerText = 'Error — try again';
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        btn.disabled = false;
+        btn.innerText = '✔️ Mark as Watched';
+        status.innerText = 'Network error';
     });
 }

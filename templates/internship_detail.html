@@ -7,11 +7,14 @@
     <p><strong>Price:</strong> {{ 'Free' if not internship.is_paid else '₹' ~ internship.price }}</p>
 
     {% if not enrollment %}
-        <form method="POST" action="{{ url_for('enroll', iid=internship.id) }}">
-            <button class="btn-primary big">
-                {{ 'Enroll Free' if not internship.is_paid else 'Pay ₹' ~ internship.price ~ ' & Enroll' }}
-            </button>
-        </form>
+        {% if progress_map.get(c.id) and progress_map[c.id].completed %}
+    <p class="done" style="margin-top:10px;">✅ Already watched</p>
+{% else %}
+    <button class="btn-primary mark-btn" id="markBtn_{{ c.id }}" onclick="markComplete({{ c.id }})" style="margin-top:10px;">
+        ✔️ Mark as Watched
+    </button>
+    <span id="markStatus_{{ c.id }}" style="margin-left:10px;color:#16a34a;font-weight:600;"></span>
+{% endif %}
 
     {% elif enrollment.payment_status == 'pending' %}
         <div class="alert-warn">

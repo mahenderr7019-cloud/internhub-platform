@@ -620,17 +620,48 @@ def api_get_quiz(content_id):
     content = InternshipContent.query.get_or_404(content_id)
     if content.type != 'quiz':
         return jsonify({'error': 'Not a quiz'}), 400
+
+    # Check progress
+    enrollment = Enrollment.query.filter_by(
+        user_id=current_user.id,
+        internship_id=content.internship_id
+    ).first()
+
+    already_completed = False
+    score = 0
+    total = 0
+
+    if enrollment:
+        p = Progress.query.filter_by(
+            enrollment_id=enrollment.id, content_id=content_id
+        ).first()
+        if p and p.completed:
+            already_completed = True
+            score = p.score
+            try:
+                total = len(json.loads(content.quiz_data or '[]'))
+            except Exception:
+                total = 0
+
     try:
         quiz = json.loads(content.quiz_data or '[]')
     except Exception:
         quiz = []
+
+    # Strip answers from being sent to frontend
     public_quiz = []
     for q in quiz:
         public_quiz.append({
             'q': q.get('q', ''),
             'options': q.get('options', [])
         })
-    return jsonify({'quiz': public_quiz})
+
+    return jsonify({
+        'quiz': public_quiz,
+        'already_completed': already_completed,
+        'score': score,
+        'total': total
+    })
 
 
 @app.route('/mark_complete/<int:content_id>', methods=['POST'])
@@ -642,6 +673,28 @@ def mark_complete(content_id):
     if not enrollment:
         abort(403)
 
+    # Check if already completed — BLOCK retakes
+    existing = Progress.query.filter_by(
+        enrollment_id=enrollment.id, content_id=content_id
+    ).first()
+
+    if existing and existing.completed:
+        if content.type == 'quiz':
+            return jsonify({
+                'success': False,
+                'already_done': True,
+                'message': 'You have already completed this quiz. It cannot be retaken.',
+                'score': existing.score
+            }), 400
+        else:
+            # Video already watched
+            return jsonify({
+                'success': False,
+                'already_done': True,
+                'message': 'Already marked as watched.'
+            }), 400
+
+    # Fresh completion
     score = 0
     total = 0
     details = []
@@ -665,12 +718,10 @@ def mark_complete(content_id):
         except Exception as e:
             print('Quiz error:', e)
 
-    p = Progress.query.filter_by(enrollment_id=enrollment.id, content_id=content_id).first()
-    if not p:
-        p = Progress(enrollment_id=enrollment.id, content_id=content_id)
-        db.session.add(p)
+    p = Progress(enrollment_id=enrollment.id, content_id=content_id)
     p.completed = True
     p.score = score
+    db.session.add(p)
     db.session.commit()
 
     cert = check_and_issue_certificate(enrollment)
